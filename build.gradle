@@ -117,6 +117,56 @@ tasks.named('sourcesJar', Jar).configure {
 }
 
 def productionJar = tasks.named('jar', Jar).flatMap { it.archiveFile }
+def publishedSourcesJar = tasks.named('sourcesJar', Jar).flatMap { it.archiveFile }
+tasks.register('verifyAcceptedProductionJar') {
+    dependsOn tasks.named('jar')
+    inputs.file(productionJar)
+    doLast {
+        def jarFile = inputs.files.singleFile
+        def expectedSize = providers.gradleProperty('accepted_jar_size').get().toLong()
+        def expectedSha256 = providers.gradleProperty('accepted_jar_sha256').get()
+        def actualSha256 = java.security.MessageDigest.getInstance('SHA-256')
+                .digest(jarFile.bytes)
+                .encodeHex()
+                .toString()
+        if (jarFile.length() != expectedSize || actualSha256 != expectedSha256) {
+            throw new GradleException(
+                    "Accepted production JAR mismatch: ${jarFile.length()} bytes, "
+                            + "SHA-256 ${actualSha256}"
+            )
+        }
+    }
+}
+
+tasks.register('verifyAcceptedSourcesJar') {
+    dependsOn tasks.named('sourcesJar')
+    inputs.file(publishedSourcesJar)
+    doLast {
+        def jarFile = inputs.files.singleFile
+        def expectedSize = providers.gradleProperty('accepted_sources_jar_size').get().toLong()
+        def expectedSha256 = providers.gradleProperty('accepted_sources_jar_sha256').get()
+        def actualSha256 = java.security.MessageDigest.getInstance('SHA-256')
+                .digest(jarFile.bytes)
+                .encodeHex()
+                .toString()
+        if (jarFile.length() != expectedSize || actualSha256 != expectedSha256) {
+            throw new GradleException(
+                    "Accepted sources JAR mismatch: ${jarFile.length()} bytes, "
+                            + "SHA-256 ${actualSha256}"
+            )
+        }
+    }
+}
+
+tasks.register('verifyStagedEquivalence', Exec) {
+    dependsOn tasks.named('jar')
+    inputs.file(productionJar)
+    inputs.file('provenance/accepted-staging-entries.sha256')
+    commandLine 'python3', 'tools/verify_staged_equivalence.py',
+            '--jar', productionJar.get().asFile,
+            '--entries', 'provenance/accepted-staging-entries.sha256'
+}
+
 tasks.register('verifyProductionJar') {
     dependsOn tasks.named('jar')
     inputs.file(productionJar)
@@ -189,8 +239,88 @@ tasks.register('verifyProductionJar') {
     }
 }
 
+tasks.register('verifySourcesJar') {
+    dependsOn tasks.named('sourcesJar')
+    inputs.file(publishedSourcesJar)
+    doLast {
+        def jarFile = inputs.files.singleFile
+        def zip = new java.util.zip.ZipFile(jarFile)
+        try {
+            def entries = zip.entries().findAll { !it.directory }.collect { it.name }
+            def required = [
+                    'io/github/janguenter/bluemap/modularrouters/BlueMapModularRoutersAddon.java',
+                    'io/github/janguenter/bluemap/modularrouters/adapter/bluemap522/ModularRoutersRenderer.java',
+                    'io/github/janguenter/bluemap/modularrouters/adapter/bluemap522/GlassentialDefaultCamouflageBridge.java',
+                    'bluemap.addon.json',
+                    'assets/bluemap_modularrouters/blockstates/camouflage.json',
+                    'assets/bluemap_modularrouters/models/block/glassential_default.json',
+                    'bluemap-modularrouters/profiles/modularrouters/13.2.7/profile.json',
+                    'META-INF/LICENSE-bluemap-modular-routers-addon',
+                    'META-INF/NOTICE-bluemap-modular-routers-addon.md',
+                    'META-INF/THIRD_PARTY-bluemap-modular-routers-addon.md',
+                    'META-INF/bluemap-modularrouters/upstreams.json'
+            ]
+            def missing = required.findAll { !entries.contains(it) }
+            if (!missing.isEmpty()) {
+                throw new GradleException("Sources JAR is missing: ${missing}")
+            }
+            def addonDescriptors = entries.findAll { it == 'bluemap.addon.json' }
+            if (addonDescriptors.size() != 1) {
+                throw new GradleException(
+                        "Sources JAR must contain exactly one BlueMap descriptor: ${addonDescriptors}"
+                )
+            }
+            def addon = new groovy.json.JsonSlurper().parseText(
+                    zip.getInputStream(zip.getEntry('bluemap.addon.json')).getText('UTF-8')
+            )
+            if (addon.id != addon_id
+                    || addon.entrypoint != 'io.github.janguenter.bluemap.modularrouters.BlueMapModularRoutersAddon'
+                    || addon.dependencies != []
+                    || addon['soft-dependencies'] != ['bluemap_glassential']) {
+                throw new GradleException('Sources JAR BlueMap add-on metadata mismatch')
+            }
+            def projectJava = entries.findAll { it.endsWith('.java') }
+            def foreignJava = projectJava.findAll {
+                !it.startsWith('io/github/janguenter/bluemap/modularrouters/')
+            }
+            def forbidden = entries.findAll {
+                it.endsWith('.class')
+                        || it.endsWith('.jar')
+                        || it.startsWith('de/bluecolored/')
+                        || it.startsWith('com/github/bigenergy/glassential/')
+                        || it.startsWith('com/supermartijn642/fusion/')
+                        || it.startsWith('io/github/janguenter/bluemap/glassential/')
+                        || it.startsWith('me/desht/')
+                        || it.startsWith('net/minecraft/')
+                        || it.startsWith('net/neoforged/')
+                        || it.startsWith('assets/glassential/')
+                        || it.startsWith('assets/fusion/')
+                        || it.startsWith('assets/minecraft/')
+                        || it.startsWith('assets/bluemap_glassential/')
+                        || it.startsWith('bluemap-glassential/')
+                        || it.startsWith('META-INF/bluemap-glassential/')
+                        || it.endsWith('.png')
+                        || it.endsWith('.mcmeta')
+            }
+            if (projectJava.isEmpty() || !foreignJava.isEmpty() || !forbidden.isEmpty()) {
+                throw new GradleException(
+                        "Sources JAR boundary mismatch: foreignJava=${foreignJava}, "
+                                + "forbidden=${forbidden}"
+                )
+            }
+        } finally {
+            zip.close()
+        }
+    }
+}
+
 tasks.named('check').configure {
-    dependsOn tasks.named('verifyProductionJar'), 'verifyPinnedArtifact'
+    dependsOn tasks.named('verifyAcceptedProductionJar')
+    dependsOn tasks.named('verifyAcceptedSourcesJar')
+    dependsOn tasks.named('verifyProductionJar')
+    dependsOn tasks.named('verifySourcesJar')
+    dependsOn tasks.named('verifyStagedEquivalence')
+    dependsOn tasks.named('verifyPinnedArtifact')
 }
 
 tasks.register('verifyPinnedArtifact', Exec) {
@@ -213,6 +343,64 @@ tasks.register('verifyPinnedArtifact', Exec) {
             '--glassential-addon', glassentialAddonJar.getOrElse('missing')
 }
 
+tasks.register('verifyPublicationArtifacts') {
+    dependsOn tasks.named('generatePomFileForAddonPublication')
+    dependsOn tasks.named('generateMetadataFileForAddonPublication')
+    doLast {
+        def artifacts = [
+                [file('build/publications/addon/pom-default.xml'),
+                 providers.gradleProperty('accepted_pom_size').get().toLong(),
+                 providers.gradleProperty('accepted_pom_sha256').get()],
+                [file('build/publications/addon/module.json'),
+                 providers.gradleProperty('accepted_module_size').get().toLong(),
+                 providers.gradleProperty('accepted_module_sha256').get()]
+        ]
+        artifacts.each { artifact, expectedSize, expectedSha256 ->
+            def actualSha256 = java.security.MessageDigest.getInstance('SHA-256')
+                    .digest(artifact.bytes)
+                    .encodeHex()
+                    .toString()
+            if (artifact.length() != expectedSize || actualSha256 != expectedSha256) {
+                throw new GradleException(
+                        "Publication artifact mismatch for ${artifact}: "
+                                + "${artifact.length()} bytes, SHA-256 ${actualSha256}"
+                )
+            }
+        }
+        def pom = file('build/publications/addon/pom-default.xml').text
+        def module = new groovy.json.JsonSlurper().parse(
+                file('build/publications/addon/module.json')
+        )
+        if (!pom.contains("<version>${project.version}</version>")
+                || module.component.version != project.version.toString()
+                || project.version.toString().endsWith('-SNAPSHOT')) {
+            throw new GradleException('Publication metadata is not the final release version')
+        }
+    }
+}
+
+tasks.register('verifyReleaseMetadata') {
+    doLast {
+        def expectedTag = "v${project.version}"
+        def requestedTag = providers.gradleProperty('releaseTag').getOrElse('')
+        if (project.version.toString().endsWith('-SNAPSHOT')) {
+            throw new GradleException('Release versions must not end in -SNAPSHOT')
+        }
+        if (requestedTag != expectedTag) {
+            throw new GradleException(
+                    "Release tag mismatch: ${requestedTag ?: '<unset>'} != ${expectedTag}"
+            )
+        }
+    }
+}
+
+tasks.register('verifyReleaseCandidate') {
+    dependsOn tasks.named('check')
+    dependsOn tasks.named('verifyPinnedArtifact')
+    dependsOn tasks.named('verifyPublicationArtifacts')
+    dependsOn tasks.named('verifyReleaseMetadata')
+}
+
 publishing {
     publications {
         addon(MavenPublication) {
@@ -233,6 +421,16 @@ publishing {
                     url = 'https://github.com/jan-guenter/bluemap-modular-routers-addon'
                     connection = 'scm:git:https://github.com/jan-guenter/bluemap-modular-routers-addon.git'
                 }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/jan-guenter/bluemap-modular-routers-addon')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
             }
         }
     }

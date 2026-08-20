@@ -1,9 +1,15 @@
 .gradle/
+.ci/
 build/
 out/
+.vscode/
 .idea/
 *.iml
+*.class
 *.jar
 *.log
+*.zip
+*.py[cod]
+__pycache__/
 run/
 .DS_Store
