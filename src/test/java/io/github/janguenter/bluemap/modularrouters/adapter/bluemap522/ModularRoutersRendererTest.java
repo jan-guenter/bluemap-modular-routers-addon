@@ -13,6 +13,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.mca.blockentity.MCABlockEntity;
 import io.github.janguenter.bluemap.modularrouters.profile.ModularRoutersProfile;
+import io.github.janguenter.bluemap.modularrouters.profile.GlassentialInteropProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -164,6 +165,78 @@ class ModularRoutersRendererTest {
         assertColor(INITIAL, mapColor);
     }
 
+    @Test
+    void exactGlassRouteUsesBridgeInsteadOfGenericTargetRenderer() throws Exception {
+        AtomicInteger ordinaryCalls = new AtomicInteger();
+        AtomicInteger bridgeCalls = new AtomicInteger();
+        AtomicInteger stockCalls = new AtomicInteger();
+        ModularRoutersRenderer renderer = renderer(
+                (block, target) -> true,
+                (block, target, model, mapColor) -> ordinaryCalls.incrementAndGet(),
+                glassential(true, bridgeCalls),
+                (block, model, mapColor) -> stockCalls.incrementAndGet()
+        );
+        ArrayTileModel model = new ArrayTileModel(16);
+        Color mapColor = new Color().set(INITIAL);
+
+        renderer.render(neighborhood(state("minecraft:glass", Map.of())), null,
+                new TileModelView(model), mapColor);
+
+        assertEquals(0, ordinaryCalls.get());
+        assertEquals(1, bridgeCalls.get());
+        assertEquals(0, stockCalls.get());
+        assertEquals(2, model.size());
+        assertColor(TARGET, mapColor);
+    }
+
+    @Test
+    void unavailableBridgeFallsBackWithoutUsingRawGlassModel() throws Exception {
+        AtomicInteger ordinaryCalls = new AtomicInteger();
+        AtomicInteger bridgeCalls = new AtomicInteger();
+        AtomicInteger stockCalls = new AtomicInteger();
+        ModularRoutersRenderer renderer = renderer(
+                (block, target) -> true,
+                (block, target, model, mapColor) -> ordinaryCalls.incrementAndGet(),
+                glassential(false, bridgeCalls),
+                (block, model, mapColor) -> {
+                    stockCalls.incrementAndGet();
+                    model.add(3);
+                }
+        );
+        ArrayTileModel model = new ArrayTileModel(16);
+
+        renderer.render(neighborhood(state("minecraft:glass", Map.of())), null,
+                new TileModelView(model), new Color().set(INITIAL));
+
+        assertEquals(0, ordinaryCalls.get());
+        assertEquals(0, bridgeCalls.get());
+        assertEquals(1, stockCalls.get());
+        assertEquals(3, model.size());
+    }
+
+    @Test
+    void everyExactGlassentialRouteIsKeptOutOfTheOrdinaryLane() throws Exception {
+        AtomicInteger ordinaryCalls = new AtomicInteger();
+        AtomicInteger bridgeCalls = new AtomicInteger();
+        AtomicInteger stockCalls = new AtomicInteger();
+        ModularRoutersRenderer renderer = renderer(
+                (block, target) -> true,
+                (block, target, model, mapColor) -> ordinaryCalls.incrementAndGet(),
+                glassential(true, bridgeCalls),
+                (block, model, mapColor) -> stockCalls.incrementAndGet()
+        );
+
+        for (String id : GlassentialInteropProfile.ROUTED_BLOCK_IDS) {
+            renderer.render(neighborhood(state(id, Map.of())), null,
+                    new TileModelView(new ArrayTileModel(16)),
+                    new Color().set(INITIAL));
+        }
+
+        assertEquals(0, ordinaryCalls.get());
+        assertEquals(1, bridgeCalls.get());
+        assertEquals(48, stockCalls.get());
+    }
+
     private static void assertStockFallback(BlockState camouflage) throws Exception {
         AtomicInteger targetCalls = new AtomicInteger();
         ModularRoutersRenderer renderer = renderer(
@@ -193,6 +266,47 @@ class ModularRoutersRendererTest {
         return new ModularRoutersRenderer(
                 ModularRoutersRuntime.INSTANCE, policy, target, stock
         );
+    }
+
+    private static ModularRoutersRenderer renderer(
+            ModularRoutersRenderer.TargetPolicy policy,
+            ModularRoutersRenderer.TargetRenderer target,
+            ModularRoutersRenderer.GlassentialTarget glassential,
+            ModularRoutersRenderer.StockRenderer stock
+    ) {
+        return new ModularRoutersRenderer(
+                ModularRoutersRuntime.INSTANCE, policy, target, glassential, stock
+        );
+    }
+
+    private static ModularRoutersRenderer.GlassentialTarget glassential(
+            boolean available,
+            AtomicInteger calls
+    ) {
+        return new ModularRoutersRenderer.GlassentialTarget() {
+            @Override
+            public boolean owns(BlockState state) {
+                return GlassentialDefaultCamouflageBridge.ownsRoute(state);
+            }
+
+            @Override
+            public boolean accepts(BlockState state) {
+                return available
+                        && GlassentialDefaultCamouflageBridge.isPropertylessGlass(state);
+            }
+
+            @Override
+            public void render(
+                    BlockNeighborhood block,
+                    BlockState state,
+                    TileModelView model,
+                    Color mapColor
+            ) {
+                calls.incrementAndGet();
+                model.add(2);
+                mapColor.set(TARGET);
+            }
+        };
     }
 
     private static BlockNeighborhood neighborhood(BlockState camouflage)

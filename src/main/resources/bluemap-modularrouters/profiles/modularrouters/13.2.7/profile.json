@@ -17,5 +17,18 @@
       "persisted_route": "CamouflageName"
     }
   },
-  "target_policy": "ordinary-default-model-nonwaterlogged-no-tint"
+  "target_policy": "ordinary-default-model-nonwaterlogged-no-tint",
+  "glassential_interop": {
+    "addon_id": "bluemap_glassential",
+    "version": "0.1.0-alpha.1",
+    "artifact_bytes": 162440,
+    "artifact_sha256": "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780",
+    "guarded_routes": 49,
+    "supported_target": "minecraft:glass",
+    "required_target_properties": {},
+    "generated_tile": "bluemap_glassential:tiles/glassential/block/glass/0",
+    "generated_tile_dimensions": [16, 16],
+    "client_fusion_context": "default-connection-mask-cell-0",
+    "failure_policy": "atomic-stock-host"
+  }
 }

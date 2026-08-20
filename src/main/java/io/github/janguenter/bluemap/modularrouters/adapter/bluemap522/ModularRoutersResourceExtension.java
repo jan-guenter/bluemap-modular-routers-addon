@@ -11,6 +11,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Varian
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
+import io.github.janguenter.bluemap.modularrouters.profile.ExactGlassentialAddonArtifactDetector;
 import io.github.janguenter.bluemap.modularrouters.profile.ExactModularRoutersArtifactDetector;
 import io.github.janguenter.bluemap.modularrouters.profile.ModularRoutersProfile;
 
@@ -23,6 +24,7 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
 
     private final ResourcePack resourcePack;
     private final ModularRoutersRuntime runtime;
+    private volatile boolean glassentialInteropArtifactPresent;
 
     ModularRoutersResourceExtension(
             ResourcePack resourcePack,
@@ -34,6 +36,8 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
 
     @Override
     public void loadResources(Iterable<Path> roots) {
+        glassentialInteropArtifactPresent =
+                ExactGlassentialAddonArtifactDetector.matches(roots);
         if (Boolean.getBoolean("bluemap.modularrouters.disabled")) {
             runtime.inactive("operator-disabled");
         } else if (!ExactModularRoutersArtifactDetector.matches(roots)) {
@@ -43,6 +47,10 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
         } else {
             runtime.activate();
         }
+    }
+
+    boolean glassentialInteropArtifactPresent() {
+        return glassentialInteropArtifactPresent;
     }
 
     @Override

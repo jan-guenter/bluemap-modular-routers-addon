@@ -69,6 +69,10 @@ public final class BlueMap522Adapter {
                 && Double.compare(variant.getWeight(), 1D) == 0;
     }
 
+    static ModularRoutersResourceExtension extension(ResourcePack resourcePack) {
+        return resourcePack.getExtension(EXTENSION);
+    }
+
     private static <T extends Keyed> boolean canRegister(Registry<T> registry, T candidate) {
         T existing = registry.get(candidate.getKey());
         return existing == null || existing == candidate;

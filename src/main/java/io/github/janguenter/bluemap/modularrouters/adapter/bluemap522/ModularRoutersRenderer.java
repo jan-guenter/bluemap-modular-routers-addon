@@ -113,8 +113,17 @@ final class ModularRoutersRenderer implements BlockRenderer {
         BlockStateModelRenderer state = new BlockStateModelRenderer(
                 resourcePack, textures, settings
         );
-        this.targetPolicy = this::ordinaryResourceState;
-        this.targetRenderer = state::render;
+        ModularRoutersResourceExtension extension = BlueMap522Adapter.extension(
+                resourcePack
+        );
+        GlassentialTarget glassential = new GlassentialDefaultCamouflageBridge(
+                resourcePack,
+                textures,
+                settings,
+                extension != null && extension.glassentialInteropArtifactPresent()
+        );
+        this.targetPolicy = guardedPolicy(glassential, this::ordinaryResourceState);
+        this.targetRenderer = guardedRenderer(glassential, state::render);
         this.stockRenderer = (block, target, color) -> renderStockResources(
                 stock, block, target, color
         );
@@ -130,6 +139,20 @@ final class ModularRoutersRenderer implements BlockRenderer {
         this.runtime = runtime;
         this.targetPolicy = targetPolicy;
         this.targetRenderer = targetRenderer;
+        this.stockRenderer = stockRenderer;
+    }
+
+    ModularRoutersRenderer(
+            ModularRoutersRuntime runtime,
+            TargetPolicy ordinaryPolicy,
+            TargetRenderer ordinaryRenderer,
+            GlassentialTarget glassential,
+            StockRenderer stockRenderer
+    ) {
+        this.resourcePack = null;
+        this.runtime = runtime;
+        this.targetPolicy = guardedPolicy(glassential, ordinaryPolicy);
+        this.targetRenderer = guardedRenderer(glassential, ordinaryRenderer);
         this.stockRenderer = stockRenderer;
     }
 
@@ -191,6 +214,27 @@ final class ModularRoutersRenderer implements BlockRenderer {
                 variant.getRenderer() == BlockRendererType.DEFAULT
                         && !ResourcePack.MISSING_BLOCK_MODEL.equals(variant.getModel())
                         && ordinaryModel(resourcePack.getModels().get(variant.getModel())));
+    }
+
+    private static TargetPolicy guardedPolicy(
+            GlassentialTarget glassential,
+            TargetPolicy ordinary
+    ) {
+        return (block, state) -> glassential.owns(state)
+                ? glassential.accepts(state) : ordinary.test(block, state);
+    }
+
+    private static TargetRenderer guardedRenderer(
+            GlassentialTarget glassential,
+            TargetRenderer ordinary
+    ) {
+        return (block, state, target, color) -> {
+            if (glassential.owns(state)) {
+                glassential.render(block, state, target, color);
+            } else {
+                ordinary.render(block, state, target, color);
+            }
+        };
     }
 
     static boolean propertiesMatchResource(
@@ -321,5 +365,18 @@ final class ModularRoutersRenderer implements BlockRenderer {
     @FunctionalInterface
     interface StockRenderer {
         void render(BlockNeighborhood block, TileModelView target, Color mapColor);
+    }
+
+    interface GlassentialTarget {
+        boolean owns(BlockState state);
+
+        boolean accepts(BlockState state);
+
+        void render(
+                BlockNeighborhood block,
+                BlockState state,
+                TileModelView target,
+                Color mapColor
+        );
     }
 }

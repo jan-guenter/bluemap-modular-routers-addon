@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "bluemap_glassential:tiles/glassential/block/glass/0"
+  }
+}

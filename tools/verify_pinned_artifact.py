@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the exact All the Mons 1.2.0 Modular Routers artifact."""
+"""Verify the exact Modular Routers and Glassential bridge artifacts."""
 
 from __future__ import annotations
 
@@ -18,26 +18,69 @@ REQUIRED = {
     "me/desht/modularrouters/block/tile/ModularRouterBlockEntity.class",
     "me/desht/modularrouters/block/tile/TemplateFrameBlockEntity.class",
 }
+GLASSENTIAL_ADDON_SIZE = 162_440
+GLASSENTIAL_ADDON_SHA256 = (
+    "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780"
+)
+GLASSENTIAL_ADDON_REQUIRED = {
+    "bluemap.addon.json",
+    "assets/bluemap_glassential/blockstates/fusion_model.json",
+    (
+        "io/github/janguenter/bluemap/glassential/adapter/bluemap522/"
+        "GlassentialResourceExtension.class"
+    ),
+    (
+        "bluemap-glassential/profiles/glassential/3.4.5-fusion-1.3.12/"
+        "profile.json"
+    ),
+}
+
+
+def verify(
+    path: pathlib.Path,
+    expected_size: int,
+    expected_sha256: str,
+    required: set[str],
+    label: str,
+) -> bool:
+    payload = path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if len(payload) != expected_size or digest != expected_sha256:
+        print(
+            f"{label} mismatch: {len(payload)} bytes, SHA-256 {digest}",
+            file=sys.stderr,
+        )
+        return False
+    with zipfile.ZipFile(path) as archive:
+        missing = sorted(required.difference(archive.namelist()))
+    if missing:
+        print(f"{label} missing entries: {missing}", file=sys.stderr)
+        return False
+    print(f"verified {label}: {len(payload)} bytes, SHA-256 {digest}")
+    return True
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--jar", required=True, type=pathlib.Path)
+    parser.add_argument("--glassential-addon", required=True, type=pathlib.Path)
     args = parser.parse_args()
-    payload = args.jar.read_bytes()
-    digest = hashlib.sha256(payload).hexdigest()
-    if len(payload) != EXPECTED_SIZE or digest != EXPECTED_SHA256:
-        print(
-            f"pinned artifact mismatch: {len(payload)} bytes, SHA-256 {digest}",
-            file=sys.stderr,
-        )
+    if not verify(
+        args.jar,
+        EXPECTED_SIZE,
+        EXPECTED_SHA256,
+        REQUIRED,
+        "Modular Routers 13.2.7",
+    ):
         return 1
-    with zipfile.ZipFile(args.jar) as archive:
-        missing = sorted(REQUIRED.difference(archive.namelist()))
-    if missing:
-        print(f"pinned artifact missing entries: {missing}", file=sys.stderr)
+    if not verify(
+        args.glassential_addon,
+        GLASSENTIAL_ADDON_SIZE,
+        GLASSENTIAL_ADDON_SHA256,
+        GLASSENTIAL_ADDON_REQUIRED,
+        "BlueMap Glassential add-on 0.1.0-alpha.1",
+    ):
         return 1
-    print(f"verified Modular Routers 13.2.7: {len(payload)} bytes, SHA-256 {digest}")
     return 0
 
 

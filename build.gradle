@@ -51,8 +51,12 @@ tasks.withType(AbstractArchiveTask).configureEach {
 tasks.named('test', Test).configure {
     useJUnitPlatform()
     def modularRoutersJar = providers.gradleProperty('modularRoutersJar')
+    def glassentialAddonJar = providers.gradleProperty('glassentialAddonJar')
     if (modularRoutersJar.isPresent()) {
         systemProperty 'modularRoutersJar', modularRoutersJar.get()
+    }
+    if (glassentialAddonJar.isPresent()) {
+        systemProperty 'glassentialAddonJar', glassentialAddonJar.get()
     }
 }
 
@@ -124,6 +128,7 @@ tasks.register('verifyProductionJar') {
             def required = [
                     'bluemap.addon.json',
                     'assets/bluemap_modularrouters/blockstates/camouflage.json',
+                    'assets/bluemap_modularrouters/models/block/glassential_default.json',
                     'bluemap-modularrouters/profiles/modularrouters/13.2.7/profile.json',
                     'META-INF/LICENSE-bluemap-modular-routers-addon',
                     'META-INF/NOTICE-bluemap-modular-routers-addon.md',
@@ -140,8 +145,19 @@ tasks.register('verifyProductionJar') {
             if (addon.id != addon_id
                     || addon.entrypoint != 'io.github.janguenter.bluemap.modularrouters.BlueMapModularRoutersAddon'
                     || addon.dependencies != []
-                    || addon['soft-dependencies'] != []) {
+                    || addon['soft-dependencies'] != ['bluemap_glassential']) {
                 throw new GradleException('BlueMap add-on metadata mismatch')
+            }
+            def bridgeModel = new groovy.json.JsonSlurper().parseText(
+                    zip.getInputStream(zip.getEntry(
+                            'assets/bluemap_modularrouters/models/block/glassential_default.json'
+                    )).getText('UTF-8')
+            )
+            if (bridgeModel.parent != 'minecraft:block/cube_all'
+                    || bridgeModel.textures != [
+                            all: 'bluemap_glassential:tiles/glassential/block/glass/0'
+                    ]) {
+                throw new GradleException('Glassential bridge model mismatch')
             }
             def forbidden = entries.findAll {
                 it.endsWith('.jar')
@@ -149,9 +165,20 @@ tasks.register('verifyProductionJar') {
                         || it == 'fabric.mod.json'
                         || it.endsWith('.mixins.json')
                         || it.startsWith('de/bluecolored/')
+                        || it.startsWith('com/github/bigenergy/glassential/')
+                        || it.startsWith('com/supermartijn642/fusion/')
+                        || it.startsWith('io/github/janguenter/bluemap/glassential/')
                         || it.startsWith('me/desht/')
                         || it.startsWith('net/minecraft/')
                         || it.startsWith('net/neoforged/')
+                        || it.startsWith('assets/glassential/')
+                        || it.startsWith('assets/fusion/')
+                        || it.startsWith('assets/minecraft/')
+                        || it.startsWith('assets/bluemap_glassential/')
+                        || it.startsWith('bluemap-glassential/')
+                        || it.startsWith('META-INF/bluemap-glassential/')
+                        || it.endsWith('.png')
+                        || it.endsWith('.mcmeta')
             }
             if (!forbidden.isEmpty()) {
                 throw new GradleException("Production JAR contains forbidden entries: ${forbidden}")
@@ -168,15 +195,22 @@ tasks.named('check').configure {
 
 tasks.register('verifyPinnedArtifact', Exec) {
     def modularRoutersJar = providers.gradleProperty('modularRoutersJar')
+    def glassentialAddonJar = providers.gradleProperty('glassentialAddonJar')
     doFirst {
         if (!modularRoutersJar.isPresent()) {
             throw new GradleException(
                     'Set -PmodularRoutersJar to the exact All the Mons 1.2.0 Modular Routers JAR.'
             )
         }
+        if (!glassentialAddonJar.isPresent()) {
+            throw new GradleException(
+                    'Set -PglassentialAddonJar to the exact released Glassential add-on JAR.'
+            )
+        }
     }
     commandLine 'python3', 'tools/verify_pinned_artifact.py',
-            '--jar', modularRoutersJar.getOrElse('missing')
+            '--jar', modularRoutersJar.getOrElse('missing'),
+            '--glassential-addon', glassentialAddonJar.getOrElse('missing')
 }
 
 publishing {

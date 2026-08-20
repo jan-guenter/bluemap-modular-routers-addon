@@ -13,6 +13,7 @@ part of the root orchestration repository.
 | BlueMap | backport `5.22-agent.backport-5.22-mc1.21.1-2`, commit `9be321df995a1103808621d529eb72773e719d4d` |
 | Modular Routers | `13.2.7`, 1,285,765 bytes, SHA-256 `10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c` |
 | Modular Routers source | tag `v13.2.7`, commit `1df4d085a76c763d8eb2cefd8baeda5f4a4188ed` |
+| BlueMap Glassential add-on | `0.1.0-alpha.1`, 162,440 bytes, SHA-256 `a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780` |
 
 A changed pack, BlueMap build, or Modular Routers artifact begins a new
 evidence and visual-review task.
@@ -36,6 +37,13 @@ evidence and visual-review task.
   malformed, duplicate, empty, unsupported, resource-invalid or
   over-capacity routes must reset partial geometry and map color, then render
   the host atomically.
+- Treat all 49 exact routes owned by the released Glassential add-on as custom
+  renderer routes. Only propertyless `minecraft:glass` is admitted through
+  the exact optional bridge: require the released add-on artifact, its active
+  synthetic dispatch and its generated 16-by-16 Fusion cell-0 tile, then use
+  the project-owned cube model against the original host neighborhood. Every
+  unavailable, inactive or invalid interop state and the other 48 routes fall
+  back atomically to the stock Modular Routers host.
 - Do not render activity, contents, BER effects, animation, or `Mimic`
   physics. The router's rapidly changing active indicator is not a custom
   route.
@@ -51,6 +59,7 @@ Run from this repository with the exact pinned JAR:
 ```bash
 gradle --no-daemon \
   -PmodularRoutersJar=/tmp/modular-routers-13.2.7+mc1.21.1.jar \
+  -PglassentialAddonJar=../bluemap-glassential-addon/build/libs/bluemap-glassential-addon-0.1.0-alpha.1.jar \
   clean check build generatePomFileForAddonPublication \
   generateMetadataFileForAddonPublication verifyPinnedArtifact
 ```
