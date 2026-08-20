@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "project_license": "MIT",
+  "modules": [
+    {
+      "path": "src/main/java/**",
+      "lane": "owner-mit-adaptation-and-independent-resource-interpreter",
+      "spdx": "MIT",
+      "notes": "Adapter, exact-artifact gate and atomic stock-fallback structure adapt the owner's MIT SecurityCraft add-on; Modular Routers source supplies reference evidence only."
+    }
+  ],
+  "evidence": [
+    {
+      "project": "Modular Routers",
+      "mod_id": "modularrouters",
+      "version": "13.2.7",
+      "artifact_bytes": 1285765,
+      "artifact_sha1": "386fcae227b6d7963ba11e9808be4bc0910079da",
+      "artifact_sha256": "10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c",
+      "curseforge_project": 250294,
+      "curseforge_file": 8478801,
+      "artifact_tier": "T2_ARTIFACT_EXACT",
+      "source_tag": "v13.2.7",
+      "source_commit": "1df4d085a76c763d8eb2cefd8baeda5f4a4188ed",
+      "source_tree": "8d3b395df1197df9ec393637ccddad21dd60b125",
+      "source_tier": "T4_RELEASE_CORRELATED",
+      "source_use": "registry, blockstate roster and persisted-field identities only",
+      "redistributed": false
+    },
+    {
+      "project": "BlueMap SecurityCraft Add-on",
+      "version": "v0.1.0-alpha.1",
+      "commit": "a99e816581b62c71dae3975e1e677a1ff93aec64",
+      "license": "MIT",
+      "use": "owner-authored adapter, exact-gate, ordinary-resource and atomic-fallback structure",
+      "redistributed": false
+    },
+    {
+      "project": "BlueMap",
+      "version": "5.22-agent.backport-5.22-mc1.21.1-2",
+      "commit": "9be321df995a1103808621d529eb72773e719d4d",
+      "license": "MIT",
+      "use": "compile-only internal API",
+      "redistributed": false
+    }
+  ]
+}

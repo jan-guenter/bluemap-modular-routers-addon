@@ -1,0 +1,6 @@
+{
+  "id": "bluemap-modularrouters",
+  "entrypoint": "io.github.janguenter.bluemap.modularrouters.BlueMapModularRoutersAddon",
+  "dependencies": [],
+  "soft-dependencies": []
+}

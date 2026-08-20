@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "route": "modularrouters-camouflage",
+  "mod_id": "modularrouters",
+  "version": "13.2.7",
+  "artifact_bytes": 1285765,
+  "artifact_sha256": "10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c",
+  "hosts": {
+    "modularrouters:modular_router": {
+      "block_entity": "modularrouters:modular_router",
+      "legal_host_states": 16,
+      "persisted_route": "Upgrades.Items[].components.modularrouters:camouflage"
+    },
+    "modularrouters:template_frame": {
+      "block_entity": "modularrouters:template_frame",
+      "legal_host_states": 1,
+      "persisted_route": "CamouflageName"
+    }
+  },
+  "target_policy": "ordinary-default-model-nonwaterlogged-no-tint"
+}
