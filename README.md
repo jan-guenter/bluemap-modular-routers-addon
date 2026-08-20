@@ -1,7 +1,17 @@
 # BlueMap Modular Routers Add-on
 
+[![CI](https://github.com/jan-guenter/bluemap-modular-routers-addon/actions/workflows/ci.yml/badge.svg)](https://github.com/jan-guenter/bluemap-modular-routers-addon/actions/workflows/ci.yml)
+
 A narrow Java 21 BlueMap 5.22 add-on that restores Modular Routers' persisted
 camouflage in static maps.
+
+Version `0.1.0-alpha.1` is the owner-accepted release candidate. Its final
+production JAR is 46,780 bytes with SHA-256
+`c8e0c591169e12334abc85c3a917caffb5c82e4dd000acf92d0ff101b8f97a31`.
+The accepted staging gallery passed all 8 assertions with zero failures at
+the immediate, 20-tick and 100-tick phases on 2026-08-20. Its deterministic
+gallery ZIP is 3,825 bytes with SHA-256
+`f6011f220590f8ddb6d557e9be01830e3872e3c0ec17cfb8fd3c9816a9b9cd6f`.
 
 The exact profile activates only for Modular Routers `13.2.7`, JAR size
 1,285,765 bytes and SHA-256
@@ -41,8 +51,10 @@ Routers and Chisels & Bits targets are rejected.
 gradle --no-daemon \
   -PmodularRoutersJar=/tmp/modular-routers-13.2.7+mc1.21.1.jar \
   -PglassentialAddonJar=../bluemap-glassential-addon/build/libs/bluemap-glassential-addon-0.1.0-alpha.1.jar \
+  -PreleaseTag=v0.1.0-alpha.1 \
   clean check build generatePomFileForAddonPublication \
-  generateMetadataFileForAddonPublication verifyPinnedArtifact
+  generateMetadataFileForAddonPublication verifyPublicationArtifacts \
+  verifyReleaseCandidate
 ```
 
 The build uses the sibling `../bluemap-backport` checkout by default. The
@@ -62,3 +74,11 @@ rendering without changing world data.
 
 Only the exact All the Mons 1.2.0 profile is supported. Runtime rendering,
 owner visual acceptance, release and deployment are separate gates.
+
+## Release
+
+The intended immutable tag is `v0.1.0-alpha.1`, and the Maven coordinate is
+`io.github.jan-guenter:bluemap-modular-routers-addon:0.1.0-alpha.1`.
+Publication is allowed only after the independently audited pull request and
+its final-head CI pass. See [the release procedure](docs/RELEASING.md) and
+[recorded candidate provenance](provenance/release.json).
