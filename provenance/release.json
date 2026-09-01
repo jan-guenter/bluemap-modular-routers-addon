@@ -1,86 +1,92 @@
 {
   "schema_version": 1,
-  "status": "owner-accepted-release-candidate",
-  "version": "0.1.0-alpha.1",
-  "release_date": "2026-08-20",
+  "status": "unpublished-migration-candidate",
+  "published": false,
+  "version": "0.1.0-alpha.2",
+  "release_date": "2026-09-01",
   "repository": "https://github.com/jan-guenter/bluemap-modular-routers-addon",
-  "tag": "v0.1.0-alpha.1",
-  "maven_coordinate": "io.github.jan-guenter:bluemap-modular-routers-addon:0.1.0-alpha.1",
-  "owner_accepted_staging": {
-    "commit": "3fd7b2faeca5d71909b393a5f001a4f1dd1d7a84",
-    "tree": "1882c633bc66e1eefc90a83fda24ed3486409974",
-    "production_jar_size": 46788,
-    "production_jar_sha256": "9d6a92cfc578b6f55401a6a97cbed8b01ee67d2ff190a8b729112e8ce0183c3c",
-    "visual_acceptance": true,
-    "gallery_checks": "8/8 with zero failures at immediate, 20-tick, and 100-tick phases"
+  "tag": "v0.1.0-alpha.2",
+  "maven_coordinate": "io.github.jan-guenter:bluemap-modular-routers-addon:0.1.0-alpha.2",
+  "bluemap": {
+    "version": "5.22-feature.backport-5.23-stateless-java-web-server-46",
+    "commit": "7e07f4e74ec1e92a6ead9aa1e66054af3e133aac",
+    "api_commit": "285c9a60eff3ac2b0cab308ce1058d1565be0971"
   },
-  "final_release_artifacts": {
+  "adapter_api": {
+    "version": "0.1.0-alpha.2",
+    "commit": "e81f08bc4bfbf02d810ec8949a019130e2e61634",
+    "source_tree": "2f974c9bb2ba13888d69682f86f30f58922d30eb",
+    "source_files_compiled": 4,
+    "module_jar_installed": false,
+    "module_jar_bundled": false,
+    "module_jar_nested": false,
+    "local_adapter_package": "io.github.janguenter.bluemap.modularrouters.adapter.bluemap523"
+  },
+  "baseline_release": {
+    "version": "0.1.0-alpha.1",
+    "tag": "v0.1.0-alpha.1",
+    "commit": "7fd7a4d0c40bd2dae13bb87e48445eb905322993",
+    "production_jar_size": 46780,
+    "production_jar_sha256": "c8e0c591169e12334abc85c3a917caffb5c82e4dd000acf92d0ff101b8f97a31",
+    "owner_visual_acceptance": "2026-08-20"
+  },
+  "glassential_bridge": {
+    "version": "0.1.0-alpha.2",
+    "tag": "v0.1.0-alpha.2",
+    "commit": "7d75cd0288849bc577471f566008b834ad36f37b",
+    "size": 166871,
+    "sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60"
+  },
+  "candidate_artifacts": {
     "production_jar": {
-      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.1.jar",
-      "size": 46780,
-      "sha256": "c8e0c591169e12334abc85c3a917caffb5c82e4dd000acf92d0ff101b8f97a31"
+      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2.jar",
+      "size": 50021,
+      "sha256": "11073269fb60bb65a011aa987015264b73c1170bce93fc6677a6fe507ee22f45"
     },
     "sources_jar": {
-      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.1-sources.jar",
-      "size": 25493,
-      "sha256": "7e48efaaae36d1350e0e9096200146f4659b2b919ca740032933696b6f718384"
+      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2-sources.jar",
+      "size": 28721,
+      "sha256": "c328f9d896da758f42053b97298e43c166c4102ac50ff26083bec8e6b4f08276"
     },
     "pom": {
-      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.1.pom",
+      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2.pom",
       "size": 1376,
-      "sha256": "2a381dbaa802d14f1ae71cdbf66b5be26b76d649b909e0fa161655e3ee637ab3"
+      "sha256": "83bd1e0332250735d4d7dacf16f960027355a77e7e376649d4add4d611e68807"
     },
     "gradle_module": {
-      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.1.module.json",
+      "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2.module.json",
       "size": 2873,
-      "sha256": "ae7988b2a033583b0b79515e1c8bea527ae6ee53d573c969526bf200768a245a"
+      "sha256": "c143fe978879bf91b07922c72250792ff3b20dc9374cdf117c9f619f6e1693a2"
     },
     "sha256sums": {
       "file_name": "SHA256SUMS",
       "size": 480,
-      "sha256": "02d51742dbd66896be26c23742db7adeff08208f44d2a4c5aff736065ed47988"
+      "sha256": "8c18d09321a7e7c30dc3f6ba3ce326fe593567493efa9f90f49689d3f086053f"
     }
   },
-  "staged_equivalence": {
-    "entry_manifest": "provenance/accepted-staging-entries.sha256",
-    "identical_non_manifest_entries": 29,
-    "whole_jar_byte_identical": false,
-    "only_changed_entry": "META-INF/MANIFEST.MF",
-    "change_reason": "Implementation-Version changed from the staged SNAPSHOT marker to the final release version."
+  "preserved_contract": {
+    "routed_hosts": 2,
+    "glassential_guarded_routes": 49,
+    "gallery_placements": 4,
+    "gallery_assertions_per_phase": 8,
+    "gallery_sources_changed": false,
+    "profiles_and_resources_changed": false,
+    "renderer_behavior_changed": false,
+    "stock_fallback_changed": false
   },
-  "gallery": {
-    "archive_file_name": "bluemap-modular-routers-gallery.zip",
-    "size": 3825,
-    "sha256": "f6011f220590f8ddb6d557e9be01830e3872e3c0ec17cfb8fd3c9816a9b9cd6f",
-    "placements": 4,
-    "assertions_per_phase": 8,
-    "phases": 3,
-    "published_as_release_asset": false
-  },
-  "ephemeral_ci_inputs": {
-    "modular_routers": {
-      "curseforge_project": 250294,
-      "curseforge_file": 8478801,
-      "size": 1285765,
-      "sha256": "10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c"
-    },
-    "bluemap_glassential_addon": {
-      "tag": "v0.1.0-alpha.1",
-      "commit": "13fd12412573c62847700d1cfc8e4aa9d2bb5ea1",
-      "size": 162440,
-      "sha256": "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780"
-    },
-    "policy": "Downloaded only into the ephemeral runner, verified before use, and never bundled or uploaded."
+  "ephemeral_ci_input": {
+    "modular_routers_size": 1285765,
+    "modular_routers_sha256": "10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c"
   },
   "verification": {
-    "production_jar_exact_byte_gate": true,
-    "sources_jar_exact_byte_gate": true,
-    "publication_metadata_exact_byte_gate": true,
-    "gallery_archive_exact_byte_gate": true,
-    "exact_input_pair_gate": true
-  },
-  "immutable_packaged_provenance": {
-    "path": "provenance/upstreams.json",
-    "note": "Implementation provenance packaged in the accepted JAR remains byte-identical. Release-only identities are kept outside the JAR."
+    "exact_input_gate": true,
+    "adapter_api_gitlink_and_source_tree_gate": true,
+    "production_archive_boundary_gate": true,
+    "sources_archive_boundary_gate": true,
+    "local_candidate_artifact_identity_gate": true,
+    "authoritative_pr_ci_reproduction": false,
+    "local_gradle_version": "9.6.1",
+    "local_java_runtime": "21.0.12.1+1",
+    "exact_alpha_2_runtime_review": false
   }
 }

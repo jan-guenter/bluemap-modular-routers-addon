@@ -18,15 +18,15 @@ REQUIRED = {
     "me/desht/modularrouters/block/tile/ModularRouterBlockEntity.class",
     "me/desht/modularrouters/block/tile/TemplateFrameBlockEntity.class",
 }
-GLASSENTIAL_ADDON_SIZE = 162_440
+GLASSENTIAL_ADDON_SIZE = 166_871
 GLASSENTIAL_ADDON_SHA256 = (
-    "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780"
+    "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60"
 )
 GLASSENTIAL_ADDON_REQUIRED = {
     "bluemap.addon.json",
     "assets/bluemap_glassential/blockstates/fusion_model.json",
     (
-        "io/github/janguenter/bluemap/glassential/adapter/bluemap522/"
+        "io/github/janguenter/bluemap/glassential/adapter/bluemap523/"
         "GlassentialResourceExtension.class"
     ),
     (
@@ -78,7 +78,7 @@ def main() -> int:
         GLASSENTIAL_ADDON_SIZE,
         GLASSENTIAL_ADDON_SHA256,
         GLASSENTIAL_ADDON_REQUIRED,
-        "BlueMap Glassential add-on 0.1.0-alpha.1",
+        "BlueMap Glassential add-on 0.1.0-alpha.2",
     ):
         return 1
     return 0

@@ -29,10 +29,10 @@
     },
     {
       "project": "BlueMap Glassential Add-on",
-      "version": "v0.1.0-alpha.1",
-      "commit": "13fd12412573c62847700d1cfc8e4aa9d2bb5ea1",
-      "artifact_bytes": 162440,
-      "artifact_sha256": "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780",
+      "version": "v0.1.0-alpha.2",
+      "commit": "7d75cd0288849bc577471f566008b834ad36f37b",
+      "artifact_bytes": 166871,
+      "artifact_sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60",
       "license": "MIT",
       "use": "optional exact synthetic-dispatch and generated Fusion cell-0 texture provider",
       "redistributed": false
@@ -69,11 +69,20 @@
     },
     {
       "project": "BlueMap",
-      "version": "5.22-agent.backport-5.22-mc1.21.1-2",
-      "commit": "9be321df995a1103808621d529eb72773e719d4d",
+      "version": "5.22-feature.backport-5.23-stateless-java-web-server-46",
+      "commit": "7e07f4e74ec1e92a6ead9aa1e66054af3e133aac",
       "license": "MIT",
       "use": "compile-only internal API",
       "redistributed": false
+    },
+    {
+      "project": "BlueMap Add-on Adapter API",
+      "version": "0.1.0-alpha.2",
+      "commit": "e81f08bc4bfbf02d810ec8949a019130e2e61634",
+      "source_tree": "2f974c9bb2ba13888d69682f86f30f58922d30eb",
+      "license": "MIT",
+      "use": "four exact source-compiled adapter helpers; standalone JAR not bundled or installed",
+      "redistributed": true
     }
   ]
 }

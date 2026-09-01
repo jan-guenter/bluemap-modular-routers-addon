@@ -20,9 +20,9 @@
   "target_policy": "ordinary-default-model-nonwaterlogged-no-tint",
   "glassential_interop": {
     "addon_id": "bluemap_glassential",
-    "version": "0.1.0-alpha.1",
-    "artifact_bytes": 162440,
-    "artifact_sha256": "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780",
+    "version": "0.1.0-alpha.2",
+    "artifact_bytes": 166871,
+    "artifact_sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60",
     "guarded_routes": 49,
     "supported_target": "minecraft:glass",
     "required_target_properties": {},

@@ -10,10 +10,11 @@ part of the root orchestration repository.
 | --- | --- |
 | All the Mons | `1.2.0`, pack commit `c7bb230f21d14d26859d0b92548f089b3a493ad9` |
 | Minecraft / NeoForge / Java | `1.21.1` / `21.1.248` / `21` |
-| BlueMap | backport `5.22-agent.backport-5.22-mc1.21.1-2`, commit `9be321df995a1103808621d529eb72773e719d4d` |
+| BlueMap | feature backport `5.22-feature.backport-5.23-stateless-java-web-server-46`, commit `7e07f4e74ec1e92a6ead9aa1e66054af3e133aac`, API `285c9a60eff3ac2b0cab308ce1058d1565be0971` |
+| Adapter API | `0.1.0-alpha.2`, commit `e81f08bc4bfbf02d810ec8949a019130e2e61634`, source tree `2f974c9bb2ba13888d69682f86f30f58922d30eb` |
 | Modular Routers | `13.2.7`, 1,285,765 bytes, SHA-256 `10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c` |
 | Modular Routers source | tag `v13.2.7`, commit `1df4d085a76c763d8eb2cefd8baeda5f4a4188ed` |
-| BlueMap Glassential add-on | `0.1.0-alpha.1`, 162,440 bytes, SHA-256 `a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780` |
+| BlueMap Glassential add-on | `0.1.0-alpha.2`, 166,871 bytes, SHA-256 `9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60` |
 
 A changed pack, BlueMap build, or Modular Routers artifact begins a new
 evidence and visual-review task.
@@ -57,9 +58,13 @@ evidence and visual-review task.
 Run from this repository with the exact pinned JAR:
 
 ```bash
+git submodule update --init --recursive -- \
+  tooling/bluemap-addon-toolkit modules/bluemap-addon-adapter-api
 gradle --no-daemon \
+  -PbluemapSourcePath=/absolute/path/to/BlueMap-at-7e07f4e7 \
   -PmodularRoutersJar=/tmp/modular-routers-13.2.7+mc1.21.1.jar \
-  -PglassentialAddonJar=../bluemap-glassential-addon/build/libs/bluemap-glassential-addon-0.1.0-alpha.1.jar \
+  -PglassentialAddonJar=/absolute/path/bluemap-glassential-addon-0.1.0-alpha.2.jar \
+  -PreleaseTag=v0.1.0-alpha.2 \
   clean check build generatePomFileForAddonPublication \
   generateMetadataFileForAddonPublication verifyPinnedArtifact
 ```

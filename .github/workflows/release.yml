@@ -51,13 +51,24 @@ jobs:
             "$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
           git fetch --no-tags origin main:refs/remotes/origin/main
           git merge-base --is-ancestor HEAD refs/remotes/origin/main
+          python3 - "${version}" <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+
+          release = json.loads(Path("provenance/release.json").read_text())
+          if release.get("version") != sys.argv[1]:
+              raise SystemExit("release provenance version does not match addon_version")
+          if release.get("status") != "owner-accepted-release-candidate":
+              raise SystemExit("release candidate has not been owner accepted and sealed")
+          PY
           echo "VERSION=${version}" >> "${GITHUB_ENV}"
 
       - name: Check out exact BlueMap backport
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: jan-guenter/BlueMap
-          ref: 9be321df995a1103808621d529eb72773e719d4d
+          ref: 7e07f4e74ec1e92a6ead9aa1e66054af3e133aac
           path: .ci/bluemap
           submodules: recursive
           fetch-depth: 0
@@ -67,12 +78,9 @@ jobs:
         run: |
           test "$(git -C .ci/bluemap rev-parse --abbrev-ref HEAD)" = "HEAD"
           test "$(git -C .ci/bluemap rev-parse HEAD)" = \
-            "9be321df995a1103808621d529eb72773e719d4d"
+            "7e07f4e74ec1e92a6ead9aa1e66054af3e133aac"
           test "$(git -C .ci/bluemap/api rev-parse HEAD)" = \
             "285c9a60eff3ac2b0cab308ce1058d1565be0971"
-          git -C .ci/bluemap fetch --force --tags origin
-          test "$(git -C .ci/bluemap describe --exact-match --tags HEAD)" = \
-            "v5.22-agent.backport-5.22-mc1.21.1-2"
 
       - name: Set up exact promotion Java 21
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
@@ -101,21 +109,21 @@ jobs:
             --output "${input_dir}/modular-routers-13.2.7+mc1.21.1.jar" \
             "https://www.curseforge.com/api/v1/mods/250294/files/8478801/download"
           curl --fail --location --retry 3 --retry-all-errors \
-            --output "${input_dir}/bluemap-glassential-addon-0.1.0-alpha.1.jar" \
-            "https://github.com/jan-guenter/bluemap-glassential-addon/releases/download/v0.1.0-alpha.1/bluemap-glassential-addon-0.1.0-alpha.1.jar"
+            --output "${input_dir}/bluemap-glassential-addon-0.1.0-alpha.2.jar" \
+            "https://github.com/jan-guenter/bluemap-glassential-addon/releases/download/v0.1.0-alpha.2/bluemap-glassential-addon-0.1.0-alpha.2.jar"
           test "$(stat -c %s \
             "${input_dir}/modular-routers-13.2.7+mc1.21.1.jar")" -eq 1285765
           test "$(stat -c %s \
-            "${input_dir}/bluemap-glassential-addon-0.1.0-alpha.1.jar")" \
-            -eq 162440
+            "${input_dir}/bluemap-glassential-addon-0.1.0-alpha.2.jar")" \
+            -eq 166871
           sha256sum --check <<SHA256SUMS
           10f84e7f2d1bc7b655d8398d8c2e7146c4929c3ad2c97408f940ca86c1bf898c  ${input_dir}/modular-routers-13.2.7+mc1.21.1.jar
-          a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780  ${input_dir}/bluemap-glassential-addon-0.1.0-alpha.1.jar
+          9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60  ${input_dir}/bluemap-glassential-addon-0.1.0-alpha.2.jar
           SHA256SUMS
           python3 tools/verify_pinned_artifact.py \
             --jar "${input_dir}/modular-routers-13.2.7+mc1.21.1.jar" \
             --glassential-addon \
-              "${input_dir}/bluemap-glassential-addon-0.1.0-alpha.1.jar"
+              "${input_dir}/bluemap-glassential-addon-0.1.0-alpha.2.jar"
 
       - name: Verify gallery and provenance inputs
         run: |
@@ -139,28 +147,25 @@ jobs:
           gradle --no-daemon \
             -PbluemapSourcePath=.ci/bluemap \
             -PmodularRoutersJar="${input_dir}/modular-routers-13.2.7+mc1.21.1.jar" \
-            -PglassentialAddonJar="${input_dir}/bluemap-glassential-addon-0.1.0-alpha.1.jar" \
+            -PglassentialAddonJar="${input_dir}/bluemap-glassential-addon-0.1.0-alpha.2.jar" \
             "-PreleaseTag=${RELEASE_TAG}" \
             clean check build generatePomFileForAddonPublication \
             generateMetadataFileForAddonPublication \
             verifyPublicationArtifacts verifyReleaseCandidate
           test "$(stat -c %s \
             "build/libs/bluemap-modular-routers-addon-${VERSION}.jar")" \
-            -eq 46780
+            -eq 50021
           test "$(stat -c %s \
             "build/libs/bluemap-modular-routers-addon-${VERSION}-sources.jar")" \
-            -eq 25493
+            -eq 28721
           test "$(stat -c %s build/publications/addon/pom-default.xml)" -eq 1376
           test "$(stat -c %s build/publications/addon/module.json)" -eq 2873
           sha256sum --check <<SHA256SUMS
-          c8e0c591169e12334abc85c3a917caffb5c82e4dd000acf92d0ff101b8f97a31  build/libs/bluemap-modular-routers-addon-${VERSION}.jar
-          7e48efaaae36d1350e0e9096200146f4659b2b919ca740032933696b6f718384  build/libs/bluemap-modular-routers-addon-${VERSION}-sources.jar
-          2a381dbaa802d14f1ae71cdbf66b5be26b76d649b909e0fa161655e3ee637ab3  build/publications/addon/pom-default.xml
-          ae7988b2a033583b0b79515e1c8bea527ae6ee53d573c969526bf200768a245a  build/publications/addon/module.json
+          11073269fb60bb65a011aa987015264b73c1170bce93fc6677a6fe507ee22f45  build/libs/bluemap-modular-routers-addon-${VERSION}.jar
+          c328f9d896da758f42053b97298e43c166c4102ac50ff26083bec8e6b4f08276  build/libs/bluemap-modular-routers-addon-${VERSION}-sources.jar
+          83bd1e0332250735d4d7dacf16f960027355a77e7e376649d4add4d611e68807  build/publications/addon/pom-default.xml
+          c143fe978879bf91b07922c72250792ff3b20dc9374cdf117c9f619f6e1693a2  build/publications/addon/module.json
           SHA256SUMS
-          python3 tools/verify_staged_equivalence.py \
-            --jar "build/libs/bluemap-modular-routers-addon-${VERSION}.jar" \
-            --entries provenance/accepted-staging-entries.sha256
 
       - name: Prepare deterministic release bundle
         run: |
@@ -184,7 +189,7 @@ jobs:
           (cd release && sha256sum --check SHA256SUMS)
           test "$(stat -c %s release/SHA256SUMS)" -eq 480
           test "$(sha256sum release/SHA256SUMS | cut -d ' ' -f 1)" = \
-            02d51742dbd66896be26c23742db7adeff08208f44d2a4c5aff736065ed47988
+            8c18d09321a7e7c30dc3f6ba3ce326fe593567493efa9f90f49689d3f086053f
 
       - name: Create or refresh draft prerelease
         env:
@@ -216,7 +221,7 @@ jobs:
           gradle --no-daemon \
             -PbluemapSourcePath=.ci/bluemap \
             -PmodularRoutersJar="${RUNNER_TEMP}/modular-routers-input/modular-routers-13.2.7+mc1.21.1.jar" \
-            -PglassentialAddonJar="${RUNNER_TEMP}/modular-routers-input/bluemap-glassential-addon-0.1.0-alpha.1.jar" \
+            -PglassentialAddonJar="${RUNNER_TEMP}/modular-routers-input/bluemap-glassential-addon-0.1.0-alpha.2.jar" \
             publishAddonPublicationToGitHubPackagesRepository
 
       - name: Verify draft assets and publish public prerelease

@@ -17,9 +17,9 @@ import java.util.Set;
 /** Exact-byte gate for the released Glassential BlueMap add-on. */
 public final class ExactGlassentialAddonArtifactDetector {
 
-    public static final long SIZE = 162_440L;
+    public static final long SIZE = 166_871L;
     public static final String SHA256 =
-            "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780";
+            "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60";
     private static final int MAX_ROOTS = 4096;
 
     private ExactGlassentialAddonArtifactDetector() {

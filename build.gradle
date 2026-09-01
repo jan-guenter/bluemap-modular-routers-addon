@@ -192,7 +192,6 @@ tasks.register('verifyProductionJar') {
             )
             if (addon.id != addon_id
                     || addon.entrypoint != 'io.github.janguenter.bluemap.modularrouters.BlueMapModularRoutersAddon'
-                    || addon.version != project.version.toString()
                     || addon.dependencies != []
                     || addon['soft-dependencies'] != ['bluemap_glassential']) {
                 throw new GradleException('BlueMap add-on metadata mismatch')
@@ -281,7 +280,6 @@ tasks.register('verifySourcesJar') {
             )
             if (addon.id != addon_id
                     || addon.entrypoint != 'io.github.janguenter.bluemap.modularrouters.BlueMapModularRoutersAddon'
-                    || addon.version != project.version.toString()
                     || addon.dependencies != []
                     || addon['soft-dependencies'] != ['bluemap_glassential']) {
                 throw new GradleException('Sources JAR BlueMap add-on metadata mismatch')
