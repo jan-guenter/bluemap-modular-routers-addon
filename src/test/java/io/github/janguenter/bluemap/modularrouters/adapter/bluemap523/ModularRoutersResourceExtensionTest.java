@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package io.github.janguenter.bluemap.modularrouters.adapter.bluemap522;
+package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
@@ -26,7 +26,7 @@ class ModularRoutersResourceExtensionTest {
     void glassentialBitResetsWithoutDeactivatingTheCoreRoute(
             @TempDir Path temporary
     ) throws IOException {
-        assertTrue(BlueMap522Adapter.install());
+        assertTrue(BlueMap523Adapter.install());
         ResourcePack resourcePack = mock(ResourcePack.class);
         ResourcePool<
                 de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState

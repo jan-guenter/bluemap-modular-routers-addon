@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package io.github.janguenter.bluemap.modularrouters.adapter.bluemap522;
+package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.MaxCapacityReachedException;
@@ -113,7 +113,7 @@ final class ModularRoutersRenderer implements BlockRenderer {
         BlockStateModelRenderer state = new BlockStateModelRenderer(
                 resourcePack, textures, settings
         );
-        ModularRoutersResourceExtension extension = BlueMap522Adapter.extension(
+        ModularRoutersResourceExtension extension = BlueMap523Adapter.extension(
                 resourcePack
         );
         GlassentialTarget glassential = new GlassentialDefaultCamouflageBridge(
