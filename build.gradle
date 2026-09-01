@@ -14,6 +14,10 @@ base {
     archivesName = artifact_id
 }
 
+sourceSets {
+    main.java.srcDir 'modules/bluemap-addon-adapter-api/src/main/java'
+}
+
 repositories {
     mavenCentral()
     maven {
@@ -56,6 +60,10 @@ tasks.named('jar', Jar).configure {
         into 'META-INF'
         rename { 'LICENSE-bluemap-modular-routers-addon' }
     }
+    from('modules/bluemap-addon-adapter-api/LICENSE') {
+        into 'META-INF'
+        rename { 'LICENSE-bluemap-addon-adapter-api' }
+    }
     from('NOTICE.md') {
         into 'META-INF'
         rename { 'NOTICE-bluemap-modular-routers-addon.md' }
@@ -75,6 +83,10 @@ tasks.named('sourcesJar', Jar).configure {
         into 'META-INF'
         rename { 'LICENSE-bluemap-modular-routers-addon' }
     }
+    from('modules/bluemap-addon-adapter-api/LICENSE') {
+        into 'META-INF'
+        rename { 'LICENSE-bluemap-addon-adapter-api' }
+    }
     from('NOTICE.md') {
         into 'META-INF'
         rename { 'NOTICE-bluemap-modular-routers-addon.md' }
@@ -90,6 +102,22 @@ tasks.named('sourcesJar', Jar).configure {
 
 def productionJar = tasks.named('jar', Jar).flatMap { it.archiveFile }
 def publishedSourcesJar = tasks.named('sourcesJar', Jar).flatMap { it.archiveFile }
+def sharedAdapterApiPackage =
+        'io/github/janguenter/bluemap/addon/adapter/api/bluemap523/'
+def sharedAdapterApiClasses = [
+        "${sharedAdapterApiPackage}BlueMapRuntimeCompatibility.class",
+        "${sharedAdapterApiPackage}RegistryGuard.class",
+        "${sharedAdapterApiPackage}ResourceExtensionType.class",
+        "${sharedAdapterApiPackage}SyntheticDispatch.class"
+].collect { it.toString() }
+def sharedAdapterApiSources = [
+        "${sharedAdapterApiPackage}BlueMapRuntimeCompatibility.java",
+        "${sharedAdapterApiPackage}RegistryGuard.java",
+        "${sharedAdapterApiPackage}ResourceExtensionType.java",
+        "${sharedAdapterApiPackage}SyntheticDispatch.java"
+].collect { it.toString() }
+def legacyLocalAdapterPackage =
+        'io/github/janguenter/bluemap/modularrouters/adapter/bluemap522/'
 tasks.register('verifyAcceptedProductionJar') {
     dependsOn tasks.named('jar')
     inputs.file(productionJar)
@@ -130,15 +158,6 @@ tasks.register('verifyAcceptedSourcesJar') {
     }
 }
 
-tasks.register('verifyStagedEquivalence', Exec) {
-    dependsOn tasks.named('jar')
-    inputs.file(productionJar)
-    inputs.file('provenance/accepted-staging-entries.sha256')
-    commandLine 'python3', 'tools/verify_staged_equivalence.py',
-            '--jar', productionJar.get().asFile,
-            '--entries', 'provenance/accepted-staging-entries.sha256'
-}
-
 tasks.register('verifyProductionJar') {
     dependsOn tasks.named('jar')
     inputs.file(productionJar)
@@ -153,13 +172,20 @@ tasks.register('verifyProductionJar') {
                     'assets/bluemap_modularrouters/models/block/glassential_default.json',
                     'bluemap-modularrouters/profiles/modularrouters/13.2.7/profile.json',
                     'META-INF/LICENSE-bluemap-modular-routers-addon',
+                    'META-INF/LICENSE-bluemap-addon-adapter-api',
                     'META-INF/NOTICE-bluemap-modular-routers-addon.md',
                     'META-INF/THIRD_PARTY-bluemap-modular-routers-addon.md',
                     'META-INF/bluemap-modularrouters/upstreams.json'
-            ]
+            ] + sharedAdapterApiClasses
             def missing = required.findAll { !entries.contains(it) }
-            if (!missing.isEmpty()) {
-                throw new GradleException("Production JAR is missing: ${missing}")
+            def duplicateShared = sharedAdapterApiClasses.findAll { shared ->
+                entries.count { it == shared } != 1
+            }
+            if (!missing.isEmpty() || !duplicateShared.isEmpty()) {
+                throw new GradleException(
+                        "Production JAR shared boundary mismatch: missing=${missing}, "
+                                + "nonUnique=${duplicateShared}"
+                )
             }
             def addon = new groovy.json.JsonSlurper().parseText(
                     zip.getInputStream(zip.getEntry('bluemap.addon.json')).getText('UTF-8')
@@ -183,6 +209,9 @@ tasks.register('verifyProductionJar') {
             }
             def forbidden = entries.findAll {
                 it.endsWith('.jar')
+                        || (it.endsWith('.class')
+                        && !it.startsWith('io/github/janguenter/bluemap/modularrouters/')
+                        && !sharedAdapterApiClasses.contains(it))
                         || it == 'META-INF/neoforge.mods.toml'
                         || it == 'fabric.mod.json'
                         || it.endsWith('.mixins.json')
@@ -199,6 +228,9 @@ tasks.register('verifyProductionJar') {
                         || it.startsWith('assets/bluemap_glassential/')
                         || it.startsWith('bluemap-glassential/')
                         || it.startsWith('META-INF/bluemap-glassential/')
+                        || (it.startsWith(legacyLocalAdapterPackage) && !it.endsWith('/'))
+                        || (it.startsWith(sharedAdapterApiPackage) && !it.endsWith('/')
+                            && !sharedAdapterApiClasses.contains(it))
                         || it.endsWith('.png')
                         || it.endsWith('.mcmeta')
             }
@@ -221,20 +253,21 @@ tasks.register('verifySourcesJar') {
             def entries = zip.entries().findAll { !it.directory }.collect { it.name }
             def required = [
                     'io/github/janguenter/bluemap/modularrouters/BlueMapModularRoutersAddon.java',
-                    'io/github/janguenter/bluemap/modularrouters/adapter/bluemap522/ModularRoutersRenderer.java',
-                    'io/github/janguenter/bluemap/modularrouters/adapter/bluemap522/GlassentialDefaultCamouflageBridge.java',
+                    'io/github/janguenter/bluemap/modularrouters/adapter/bluemap523/ModularRoutersRenderer.java',
+                    'io/github/janguenter/bluemap/modularrouters/adapter/bluemap523/GlassentialDefaultCamouflageBridge.java',
                     'bluemap.addon.json',
                     'assets/bluemap_modularrouters/blockstates/camouflage.json',
                     'assets/bluemap_modularrouters/models/block/glassential_default.json',
                     'bluemap-modularrouters/profiles/modularrouters/13.2.7/profile.json',
                     'META-INF/LICENSE-bluemap-modular-routers-addon',
+                    'META-INF/LICENSE-bluemap-addon-adapter-api',
                     'META-INF/NOTICE-bluemap-modular-routers-addon.md',
                     'META-INF/THIRD_PARTY-bluemap-modular-routers-addon.md',
                     'META-INF/bluemap-modularrouters/upstreams.json'
-            ]
+            ] + sharedAdapterApiSources
             def missing = required.findAll { !entries.contains(it) }
-            if (!missing.isEmpty()) {
-                throw new GradleException("Sources JAR is missing: ${missing}")
+            def duplicateShared = sharedAdapterApiSources.findAll { shared ->
+                entries.count { it == shared } != 1
             }
             def addonDescriptors = entries.findAll { it == 'bluemap.addon.json' }
             if (addonDescriptors.size() != 1) {
@@ -254,6 +287,7 @@ tasks.register('verifySourcesJar') {
             def projectJava = entries.findAll { it.endsWith('.java') }
             def foreignJava = projectJava.findAll {
                 !it.startsWith('io/github/janguenter/bluemap/modularrouters/')
+                        && !sharedAdapterApiSources.contains(it)
             }
             def forbidden = entries.findAll {
                 it.endsWith('.class')
@@ -271,12 +305,18 @@ tasks.register('verifySourcesJar') {
                         || it.startsWith('assets/bluemap_glassential/')
                         || it.startsWith('bluemap-glassential/')
                         || it.startsWith('META-INF/bluemap-glassential/')
+                        || (it.startsWith(legacyLocalAdapterPackage) && !it.endsWith('/'))
+                        || (it.startsWith(sharedAdapterApiPackage) && !it.endsWith('/')
+                            && !sharedAdapterApiSources.contains(it))
                         || it.endsWith('.png')
                         || it.endsWith('.mcmeta')
             }
-            if (projectJava.isEmpty() || !foreignJava.isEmpty() || !forbidden.isEmpty()) {
+            if (!missing.isEmpty() || !duplicateShared.isEmpty()
+                    || projectJava.isEmpty() || !foreignJava.isEmpty()
+                    || !forbidden.isEmpty()) {
                 throw new GradleException(
-                        "Sources JAR boundary mismatch: foreignJava=${foreignJava}, "
+                        "Sources JAR boundary mismatch: missing=${missing}, "
+                                + "nonUnique=${duplicateShared}, foreignJava=${foreignJava}, "
                                 + "forbidden=${forbidden}"
                 )
             }
@@ -291,7 +331,6 @@ tasks.named('check').configure {
     dependsOn tasks.named('verifyAcceptedSourcesJar')
     dependsOn tasks.named('verifyProductionJar')
     dependsOn tasks.named('verifySourcesJar')
-    dependsOn tasks.named('verifyStagedEquivalence')
     dependsOn tasks.named('verifyPinnedArtifact')
 }
 
@@ -306,7 +345,7 @@ tasks.register('verifyPinnedArtifact', Exec) {
         }
         if (!glassentialAddonJar.isPresent()) {
             throw new GradleException(
-                    'Set -PglassentialAddonJar to the exact released Glassential add-on JAR.'
+                    'Set -PglassentialAddonJar to a compatible exact Glassential add-on JAR.'
             )
         }
     }

@@ -2,20 +2,24 @@
  * SPDX-License-Identifier: MIT
  */
 
-package io.github.janguenter.bluemap.modularrouters.adapter.bluemap522;
+package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
+import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.VariantSet;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variants;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import io.github.janguenter.bluemap.modularrouters.profile.ExactGlassentialAddonArtifactDetector;
 import io.github.janguenter.bluemap.modularrouters.profile.ExactModularRoutersArtifactDetector;
+import io.github.janguenter.bluemap.modularrouters.profile.GlassentialInteropProfile;
 import io.github.janguenter.bluemap.modularrouters.profile.ModularRoutersProfile;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 /** Exact activation and narrow synthetic routing for persisted camouflage. */
 final class ModularRoutersResourceExtension implements ResourcePackExtension {
@@ -24,6 +28,8 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
 
     private final ResourcePack resourcePack;
     private final ModularRoutersRuntime runtime;
+    private volatile Map<Variant, BlockRendererType> originalRenderers = Map.of();
+    private boolean rendererSnapshotCaptured;
     private volatile boolean glassentialInteropArtifactPresent;
 
     ModularRoutersResourceExtension(
@@ -36,6 +42,7 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
 
     @Override
     public void loadResources(Iterable<Path> roots) {
+        captureOriginalRenderers();
         glassentialInteropArtifactPresent =
                 ExactGlassentialAddonArtifactDetector.matches(roots);
         if (Boolean.getBoolean("bluemap.modularrouters.disabled")) {
@@ -51,6 +58,28 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
 
     boolean glassentialInteropArtifactPresent() {
         return glassentialInteropArtifactPresent;
+    }
+
+    boolean originallyRenderedBy(Variant variant, BlockRendererType renderer) {
+        return originalRenderers.get(variant) == renderer;
+    }
+
+    private void captureOriginalRenderers() {
+        if (rendererSnapshotCaptured) {
+            return;
+        }
+        BlockRendererType glassential = BlockRendererType.REGISTRY.get(
+                GlassentialInteropProfile.SYNTHETIC_DISPATCH
+        );
+        IdentityHashMap<Variant, BlockRendererType> captured = new IdentityHashMap<>();
+        resourcePack.getBlockStates().values().forEach(state -> state.forEach(variant -> {
+            BlockRendererType renderer = variant.getRenderer();
+            if (renderer == BlockRendererType.DEFAULT || renderer == glassential) {
+                captured.put(variant, renderer);
+            }
+        }));
+        originalRenderers = Collections.unmodifiableMap(captured);
+        rendererSnapshotCaptured = true;
     }
 
     @Override
@@ -88,17 +117,6 @@ final class ModularRoutersResourceExtension implements ResourcePackExtension {
     private static boolean validDispatch(
             de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState state
     ) {
-        if (state == null || state.getMultipart() != null) {
-            return false;
-        }
-        Variants variants = state.getVariants();
-        if (variants == null || variants.getDefaultVariant() == null) {
-            return false;
-        }
-        VariantSet set = variants.getDefaultVariant();
-        if (set.getVariants().length != 1) {
-            return false;
-        }
-        return BlueMap522Adapter.isExpectedDispatch(set.getVariants()[0]);
+        return BlueMap523Adapter.isExpectedDispatch(state);
     }
 }

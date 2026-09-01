@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package io.github.janguenter.bluemap.modularrouters.adapter.bluemap522;
+package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;

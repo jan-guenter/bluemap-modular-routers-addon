@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package io.github.janguenter.bluemap.modularrouters.adapter.bluemap522;
+package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.MaxCapacityReachedException;
@@ -113,16 +113,19 @@ final class ModularRoutersRenderer implements BlockRenderer {
         BlockStateModelRenderer state = new BlockStateModelRenderer(
                 resourcePack, textures, settings
         );
-        ModularRoutersResourceExtension extension = BlueMap522Adapter.extension(
+        ModularRoutersResourceExtension extension = BlueMap523Adapter.extension(
                 resourcePack
         );
         GlassentialTarget glassential = new GlassentialDefaultCamouflageBridge(
                 resourcePack,
                 textures,
                 settings,
-                extension != null && extension.glassentialInteropArtifactPresent()
+                extension
         );
-        this.targetPolicy = guardedPolicy(glassential, this::ordinaryResourceState);
+        this.targetPolicy = guardedPolicy(
+                glassential,
+                (block, target) -> ordinaryResourceState(extension, block, target)
+        );
         this.targetRenderer = guardedRenderer(glassential, state::render);
         this.stockRenderer = (block, target, color) -> renderStockResources(
                 stock, block, target, color
@@ -195,13 +198,17 @@ final class ModularRoutersRenderer implements BlockRenderer {
         }
     }
 
-    private boolean ordinaryResourceState(BlockNeighborhood block, BlockState state) {
+    private boolean ordinaryResourceState(
+            ModularRoutersResourceExtension extension,
+            BlockNeighborhood block,
+            BlockState state
+    ) {
         if (state.isWaterlogged()) {
             return false;
         }
         de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState raw =
                 resourcePack.getBlockStates().get(state.getId());
-        if (raw == null || resourcePack.getBlockState(state) != raw
+        if (extension == null || raw == null || resourcePack.getBlockState(state) != raw
                 || !propertiesMatchResource(raw, state)) {
             return false;
         }
@@ -211,7 +218,7 @@ final class ModularRoutersRenderer implements BlockRenderer {
             return false;
         }
         return variants.stream().allMatch(variant ->
-                variant.getRenderer() == BlockRendererType.DEFAULT
+                extension.originallyRenderedBy(variant, BlockRendererType.DEFAULT)
                         && !ResourcePack.MISSING_BLOCK_MODEL.equals(variant.getModel())
                         && ordinaryModel(resourcePack.getModels().get(variant.getModel())));
     }

@@ -14,12 +14,15 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Set;
 
-/** Exact-byte gate for the released Glassential BlueMap add-on. */
+/** Exact-byte gate for compatible native Glassential BlueMap add-on artifacts. */
 public final class ExactGlassentialAddonArtifactDetector {
 
-    public static final long SIZE = 162_440L;
-    public static final String SHA256 =
-            "a956e62f7b843391917b861c831545b07af43ccceaa0bb84465e7e0b14c49780";
+    public static final long STANDALONE_SIZE = 166_871L;
+    public static final String STANDALONE_SHA256 =
+            "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60";
+    public static final long AGGREGATE_SIZE = 166_916L;
+    public static final String AGGREGATE_SHA256 =
+            "1a6b5ec84cd6c1a1bb1f0f711ddec4d6cef4b493b80d8da4d1139ad8a4eba28c";
     private static final int MAX_ROOTS = 4096;
 
     private ExactGlassentialAddonArtifactDetector() {
@@ -33,11 +36,15 @@ public final class ExactGlassentialAddonArtifactDetector {
                 return false;
             }
             try {
-                if (root == null || !Files.isRegularFile(root) || Files.size(root) != SIZE) {
+                if (root == null || !Files.isRegularFile(root)) {
                     continue;
                 }
                 Path real = root.toRealPath();
-                if (inspected.add(real) && SHA256.equals(digest(real))) {
+                long size = Files.size(real);
+                if (size != STANDALONE_SIZE && size != AGGREGATE_SIZE) {
+                    continue;
+                }
+                if (inspected.add(real) && exactIdentity(size, digest(real))) {
                     return true;
                 }
             } catch (IOException exception) {
@@ -45,6 +52,11 @@ public final class ExactGlassentialAddonArtifactDetector {
             }
         }
         return false;
+    }
+
+    static boolean exactIdentity(long size, String sha256) {
+        return size == STANDALONE_SIZE && STANDALONE_SHA256.equals(sha256)
+                || size == AGGREGATE_SIZE && AGGREGATE_SHA256.equals(sha256);
     }
 
     private static String digest(Path path) throws IOException {

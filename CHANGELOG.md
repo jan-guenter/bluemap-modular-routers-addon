@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.0-alpha.2 - 2026-09-01
+
+- Migrate the adapter boundary to exact BlueMap feature-backport commit
+  `7e07f4e74ec1e92a6ead9aa1e66054af3e133aac` and API commit
+  `285c9a60eff3ac2b0cab308ce1058d1565be0971`.
+- Compile the four Adapter API `0.1.0-alpha.2` helpers from exact gitlink
+  `e81f08bc4bfbf02d810ec8949a019130e2e61634`; remove the displaced local
+  compatibility, registry, extension-type, and dispatch helpers.
+- Require either byte-pinned native BlueMap 5.23 Glassential `0.1.0-alpha.2`
+  artifact (the standalone candidate or accepted aggregate overlay) for the
+  optional glass camouflage bridge and preserve the accepted two-host route,
+  gallery, and fallback behavior.
+- Preserve the original ordinary and Glassential renderer identities across
+  late aggregate renderer wrapping, fixing combined-pack camouflage fallback
+  without admitting originally custom targets.
+- Validate the active Glassential extension and resource schema without a
+  brittle aggregate blockstate object-identity comparison.
+- Delegate propertyless glass camouflage through Glassential's exact renderer
+  so its generated tile retains translucent material behavior.
+
 ## 0.1.0-alpha.1 - 2026-08-20
 
 - Add the exact Modular Routers 13.2.7 persisted-camouflage profile.
