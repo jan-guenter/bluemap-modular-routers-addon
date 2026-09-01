@@ -345,7 +345,7 @@ tasks.register('verifyPinnedArtifact', Exec) {
         }
         if (!glassentialAddonJar.isPresent()) {
             throw new GradleException(
-                    'Set -PglassentialAddonJar to the exact released Glassential add-on JAR.'
+                    'Set -PglassentialAddonJar to a compatible exact Glassential add-on JAR.'
             )
         }
     }

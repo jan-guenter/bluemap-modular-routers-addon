@@ -6,8 +6,8 @@ A narrow Java 21 add-on for the exact BlueMap 5.23 feature backport that
 restores Modular Routers' persisted camouflage in static maps.
 
 Version `0.1.0-alpha.2` is the unpublished BlueMap 5.23 migration candidate.
-Its production JAR is 50,021 bytes with SHA-256
-`11073269fb60bb65a011aa987015264b73c1170bce93fc6677a6fe507ee22f45`.
+Its production JAR is 53,593 bytes with SHA-256
+`160a3fc276057e634b5c1c2dad7641028c7be811a5a7262d6da53c3936b8dfc2`.
 It preserves alpha.1's accepted route and gallery contract. That staging
 gallery passed all 8 assertions with zero failures at the immediate, 20-tick
 and 100-tick phases on 2026-08-20. Its deterministic gallery ZIP remains
@@ -26,11 +26,24 @@ properties. Waterlogged states, tint-indexed models and custom-renderer or BER
 paths deliberately fall back to the stock host because those would exceed the
 exact pinned client behavior proven by this route.
 
+The add-on records the original renderer identity while resources load, then
+uses that identity for admission after aggregate add-ons apply late renderer
+wrappers. Rendering still delegates through the live wrapped variant. This
+keeps the default-model and Glassential policies intact without bypassing
+combined-pack renderer behavior.
+
 One custom-renderer exception reproduces Modular Routers' exact client result
-for propertyless `minecraft:glass`. When the exact released BlueMap
-Glassential add-on `0.1.0-alpha.2` is installed and active, this add-on renders
-its generated 16-by-16 Fusion contextless cell 0 through a project-owned cube
-model. It never reads the full 128-by-128 connected-texture sheet as one face.
+for propertyless `minecraft:glass`. When either compatible exact native
+BlueMap Glassential add-on `0.1.0-alpha.2` artifact is installed and active,
+this add-on delegates a propertyless-glass neighborhood through its exact renderer. The
+standalone candidate is 166,871 bytes with SHA-256
+`9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60`;
+the accepted aggregate integration overlay is 166,916 bytes with SHA-256
+`1a6b5ec84cd6c1a1bb1f0f711ddec4d6cef4b493b80d8da4d1139ad8a4eba28c`.
+That exact delegation preserves
+the generated Fusion tile's transparency and contextless isolated-glass
+selection. It never reads the full 128-by-128 connected-texture sheet as one
+face.
 All 49 block IDs routed by that exact Glassential profile are guarded from the
 ordinary model lane; the other 48 remain unsupported and render the stock
 Modular Routers host. Missing, changed, inactive or resource-invalid

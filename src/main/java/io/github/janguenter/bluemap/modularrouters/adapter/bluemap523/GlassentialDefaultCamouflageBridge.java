@@ -8,8 +8,8 @@ import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
+import de.bluecolored.bluemap.core.map.hires.block.BlockRenderer;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
-import de.bluecolored.bluemap.core.map.hires.block.ResourceModelRenderer;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
@@ -23,12 +23,16 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.world.BlockEntity;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import io.github.janguenter.bluemap.modularrouters.profile.GlassentialInteropProfile;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /** Exact, class-link-free bridge to Glassential's generated contextless glass tile. */
 final class GlassentialDefaultCamouflageBridge
@@ -40,19 +44,45 @@ final class GlassentialDefaultCamouflageBridge
     private static final Vector3f FULL_BLOCK_MAX = new Vector3f(16, 16, 16);
 
     private final boolean available;
-    private final ResourceModelRenderer renderer;
-    private final Variant bridgeVariant = new Variant(
-            new ResourcePath<Model>(GlassentialInteropProfile.BRIDGE_MODEL)
-    );
+    private final BlockRenderer renderer;
+    private final Variant dispatchVariant;
 
     GlassentialDefaultCamouflageBridge(
             ResourcePack resourcePack,
             TextureGallery textures,
             RenderSettings settings,
-            boolean exactAddonArtifactPresent
+            ModularRoutersResourceExtension extension
     ) {
-        this.renderer = new ResourceModelRenderer(resourcePack, textures, settings);
-        this.available = exactAddonArtifactPresent && validActiveResources(resourcePack);
+        boolean valid = extension != null
+                && extension.glassentialInteropArtifactPresent()
+                && validActiveResources(resourcePack, extension);
+        BlockRenderer foundRenderer = null;
+        Variant foundDispatch = null;
+        if (valid) {
+            try {
+                BlockRendererType rendererType = BlockRendererType.REGISTRY.get(
+                        GlassentialInteropProfile.SYNTHETIC_DISPATCH
+                );
+                foundRenderer = rendererType.create(resourcePack, textures, settings);
+                foundDispatch = onlyVariant(resourcePack.getBlockStates().get(
+                        GlassentialInteropProfile.SYNTHETIC_DISPATCH
+                ));
+            } catch (RuntimeException | LinkageError exception) {
+                valid = false;
+            }
+        }
+        this.renderer = foundRenderer;
+        this.dispatchVariant = foundDispatch;
+        this.available = valid && renderer != null && dispatchVariant != null;
+    }
+
+    GlassentialDefaultCamouflageBridge(
+            BlockRenderer renderer,
+            Variant dispatchVariant
+    ) {
+        this.renderer = renderer;
+        this.dispatchVariant = dispatchVariant;
+        this.available = renderer != null && dispatchVariant != null;
     }
 
     @Override
@@ -89,10 +119,18 @@ final class GlassentialDefaultCamouflageBridge
         if (!accepts(state)) {
             throw new IllegalArgumentException("unsupported Glassential camouflage route");
         }
-        renderer.render(originalHost, bridgeVariant, target, mapColor);
+        renderer.render(
+                new CamouflageNeighborhood(originalHost, state),
+                dispatchVariant,
+                target,
+                mapColor
+        );
     }
 
-    private static boolean validActiveResources(ResourcePack resourcePack) {
+    private static boolean validActiveResources(
+            ResourcePack resourcePack,
+            ModularRoutersResourceExtension modularRouters
+    ) {
         try {
             ResourcePack.Extension<?> type = ResourcePack.Extension.REGISTRY.get(
                     GlassentialInteropProfile.EXTENSION
@@ -112,8 +150,12 @@ final class GlassentialDefaultCamouflageBridge
                     dispatch = resourcePack.getBlockStates().get(
                             GlassentialInteropProfile.SYNTHETIC_DISPATCH
                     );
-            if (!validDispatch(dispatch, rendererType)
-                    || resourcePack.getBlockState(PROPERTYLESS_GLASS) != dispatch
+            if (!validDispatch(
+                    dispatch,
+                    rendererType,
+                    variant -> variant.getRenderer() == rendererType
+                            || modularRouters.originallyRenderedBy(variant, rendererType)
+            )
                     || !validTile(resourcePack.getTextures().get(
                             GlassentialInteropProfile.DEFAULT_GLASS_TILE
                     ))) {
@@ -131,6 +173,16 @@ final class GlassentialDefaultCamouflageBridge
             de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState state,
             BlockRendererType rendererType
     ) {
+        return validDispatch(
+                state, rendererType, variant -> variant.getRenderer() == rendererType
+        );
+    }
+
+    private static boolean validDispatch(
+            de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState state,
+            BlockRendererType rendererType,
+            Predicate<Variant> rendererMatches
+    ) {
         if (state == null || rendererType == null || state.getMultipart() != null) {
             return false;
         }
@@ -144,7 +196,7 @@ final class GlassentialDefaultCamouflageBridge
         }
         Variant variant = set.getVariants()[0];
         return variant != null
-                && variant.getRenderer() == rendererType
+                && rendererMatches.test(variant)
                 && GlassentialInteropProfile.SYNTHETIC_DISPATCH.equals(
                         rendererType.getKey()
                 )
@@ -152,6 +204,12 @@ final class GlassentialDefaultCamouflageBridge
                 && !variant.isTransformed()
                 && !variant.isUvlock()
                 && Double.compare(variant.getWeight(), 1D) == 0;
+    }
+
+    private static Variant onlyVariant(
+            de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState state
+    ) {
+        return state.getVariants().getDefaultVariant().getVariants()[0];
     }
 
     static boolean validTile(Texture tile) throws IOException {
@@ -186,5 +244,45 @@ final class GlassentialDefaultCamouflageBridge
             }
         }
         return true;
+    }
+
+    /** Target-state view for the exact Glassential renderer. */
+    private static final class CamouflageNeighborhood extends BlockNeighborhood {
+
+        private final BlockNeighborhood source;
+        private final BlockState camouflage;
+
+        private CamouflageNeighborhood(BlockNeighborhood source, BlockState camouflage) {
+            super(
+                    source,
+                    source.getResourcePack(),
+                    source.getRenderSettings(),
+                    source.getDimensionType()
+            );
+            this.source = source;
+            this.camouflage = camouflage;
+            super.set(source.getX(), source.getY(), source.getZ());
+        }
+
+        @Override
+        public BlockState getBlockState() {
+            return camouflage;
+        }
+
+        @Override
+        public BlockEntity getBlockEntity() {
+            return null;
+        }
+
+        @Override
+        public BlockProperties getProperties() {
+            return getResourcePack().getBlockProperties(camouflage);
+        }
+
+        @Override
+        public ExtendedBlock getNeighborBlock(int dx, int dy, int dz) {
+            return dx == 0 && dy == 0 && dz == 0
+                    ? this : source.getNeighborBlock(dx, dy, dz);
+        }
     }
 }

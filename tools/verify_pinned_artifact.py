@@ -18,10 +18,16 @@ REQUIRED = {
     "me/desht/modularrouters/block/tile/ModularRouterBlockEntity.class",
     "me/desht/modularrouters/block/tile/TemplateFrameBlockEntity.class",
 }
-GLASSENTIAL_ADDON_SIZE = 166_871
-GLASSENTIAL_ADDON_SHA256 = (
-    "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60"
-)
+GLASSENTIAL_ADDON_IDENTITIES = {
+    (
+        166_871,
+        "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60",
+    ),
+    (
+        166_916,
+        "1a6b5ec84cd6c1a1bb1f0f711ddec4d6cef4b493b80d8da4d1139ad8a4eba28c",
+    ),
+}
 GLASSENTIAL_ADDON_REQUIRED = {
     "bluemap.addon.json",
     "assets/bluemap_glassential/blockstates/fusion_model.json",
@@ -60,6 +66,31 @@ def verify(
     return True
 
 
+def verify_glassential(path: pathlib.Path) -> bool:
+    payload = path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if (len(payload), digest) not in GLASSENTIAL_ADDON_IDENTITIES:
+        print(
+            "BlueMap Glassential add-on 0.1.0-alpha.2 mismatch: "
+            f"{len(payload)} bytes, SHA-256 {digest}",
+            file=sys.stderr,
+        )
+        return False
+    with zipfile.ZipFile(path) as archive:
+        missing = sorted(GLASSENTIAL_ADDON_REQUIRED.difference(archive.namelist()))
+    if missing:
+        print(
+            f"BlueMap Glassential add-on 0.1.0-alpha.2 missing entries: {missing}",
+            file=sys.stderr,
+        )
+        return False
+    print(
+        "verified BlueMap Glassential add-on 0.1.0-alpha.2: "
+        f"{len(payload)} bytes, SHA-256 {digest}"
+    )
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--jar", required=True, type=pathlib.Path)
@@ -73,13 +104,7 @@ def main() -> int:
         "Modular Routers 13.2.7",
     ):
         return 1
-    if not verify(
-        args.glassential_addon,
-        GLASSENTIAL_ADDON_SIZE,
-        GLASSENTIAL_ADDON_SHA256,
-        GLASSENTIAL_ADDON_REQUIRED,
-        "BlueMap Glassential add-on 0.1.0-alpha.2",
-    ):
+    if not verify_glassential(args.glassential_addon):
         return 1
     return 0
 

@@ -4,9 +4,12 @@
 
 package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
+import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.util.Key;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -32,6 +35,8 @@ class ModularRoutersResourceExtensionTest {
                 de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState
                 > states = new ResourcePool<>();
         states.put(ModularRoutersResourceExtension.SYNTHETIC, dispatch());
+        var ordinary = ordinary();
+        states.put(Key.parse("minecraft:oak_log"), ordinary);
         when(resourcePack.getBlockStates()).thenReturn(states);
         ModularRoutersResourceExtension extension = new ModularRoutersResourceExtension(
                 resourcePack, ModularRoutersRuntime.INSTANCE
@@ -42,6 +47,13 @@ class ModularRoutersResourceExtensionTest {
         extension.loadResources(List.of(modularRouters, glassentialAddon));
         assertTrue(ModularRoutersRuntime.INSTANCE.active());
         assertTrue(extension.glassentialInteropArtifactPresent());
+
+        Variant oak = ordinary.getVariants().getVariants()[0].getVariants()[0];
+        assertTrue(extension.originallyRenderedBy(oak, BlockRendererType.DEFAULT));
+        BlockRendererType wrapper = mock(BlockRendererType.class);
+        oak.setRenderer(wrapper);
+        assertTrue(extension.originallyRenderedBy(oak, BlockRendererType.DEFAULT));
+        assertFalse(extension.originallyRenderedBy(oak, wrapper));
 
         extension.loadResources(List.of(modularRouters));
         assertTrue(ModularRoutersRuntime.INSTANCE.active());
@@ -64,6 +76,16 @@ class ModularRoutersResourceExtensionTest {
                 """
                 {"variants":{"":{"renderer":"bluemap_modularrouters:camouflage",
                   "model":"bluemap:block/missing"}}}
+                """,
+                de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState.class
+        );
+    }
+
+    private static de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState
+            ordinary() {
+        return ResourcesGson.INSTANCE.fromJson(
+                """
+                {"variants":{"axis=x":{"model":"minecraft:block/oak_log_horizontal"}}}
                 """,
                 de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState.class
         );

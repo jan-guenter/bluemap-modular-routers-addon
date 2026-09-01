@@ -5,9 +5,13 @@
 package io.github.janguenter.bluemap.modularrouters.adapter.bluemap523;
 
 import com.flowpowered.math.vector.Vector3f;
+import de.bluecolored.bluemap.core.map.hires.RenderSettings;
+import de.bluecolored.bluemap.core.map.hires.TileModelView;
+import de.bluecolored.bluemap.core.map.hires.block.BlockRenderer;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Element;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
@@ -16,7 +20,12 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVari
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.DimensionType;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import io.github.janguenter.bluemap.modularrouters.profile.GlassentialInteropProfile;
 import org.junit.jupiter.api.Test;
 
@@ -24,11 +33,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class GlassentialDefaultCamouflageBridgeTest {
 
@@ -142,6 +155,39 @@ class GlassentialDefaultCamouflageBridgeTest {
         assertFalse(GlassentialDefaultCamouflageBridge.validBridgeModel(
                 new Model(new Element[0])
         ));
+    }
+
+    @Test
+    void delegatesThroughAPropertylessGlassNeighborhood() {
+        AtomicReference<BlockNeighborhood> rendered = new AtomicReference<>();
+        BlockRenderer renderer = (block, variant, target, color) -> rendered.set(block);
+        GlassentialDefaultCamouflageBridge bridge =
+                new GlassentialDefaultCamouflageBridge(renderer, mock(Variant.class));
+        ResourcePack resourcePack = mock(ResourcePack.class);
+        RenderSettings settings = mock(RenderSettings.class);
+        DimensionType dimension = mock(DimensionType.class);
+        BlockNeighborhood source = mock(BlockNeighborhood.class);
+        BlockProperties properties = mock(BlockProperties.class);
+        ExtendedBlock neighbor = mock(ExtendedBlock.class);
+        BlockState glass = state("minecraft:glass", Map.of());
+        when(source.getResourcePack()).thenReturn(resourcePack);
+        when(source.getRenderSettings()).thenReturn(settings);
+        when(source.getDimensionType()).thenReturn(dimension);
+        when(source.getX()).thenReturn(17);
+        when(source.getY()).thenReturn(23);
+        when(source.getZ()).thenReturn(41);
+        when(source.copy()).thenReturn(neighbor);
+        when(source.getNeighborBlock(1, 0, 0)).thenReturn(neighbor);
+        when(resourcePack.getBlockProperties(glass)).thenReturn(properties);
+
+        bridge.render(source, glass, mock(TileModelView.class), new Color());
+
+        BlockNeighborhood view = rendered.get();
+        assertSame(glass, view.getBlockState());
+        assertNull(view.getBlockEntity());
+        assertSame(properties, view.getProperties());
+        assertSame(view, view.getNeighborBlock(0, 0, 0));
+        assertSame(neighbor, view.getNeighborBlock(1, 0, 0));
     }
 
     private static de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState

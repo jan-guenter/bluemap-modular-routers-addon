@@ -31,8 +31,19 @@
       "project": "BlueMap Glassential Add-on",
       "version": "v0.1.0-alpha.2",
       "commit": "7d75cd0288849bc577471f566008b834ad36f37b",
-      "artifact_bytes": 166871,
-      "artifact_sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60",
+      "compatible_artifacts": [
+        {
+          "role": "standalone_candidate",
+          "artifact_bytes": 166871,
+          "artifact_sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60"
+        },
+        {
+          "role": "accepted_aggregate_integration_overlay",
+          "artifact_bytes": 166916,
+          "artifact_sha256": "1a6b5ec84cd6c1a1bb1f0f711ddec4d6cef4b493b80d8da4d1139ad8a4eba28c",
+          "only_changed_entry": "io/github/janguenter/bluemap/glassential/BlueMapGlassentialAddon.class"
+        }
+      ],
       "license": "MIT",
       "use": "optional exact synthetic-dispatch and generated Fusion cell-0 texture provider",
       "redistributed": false

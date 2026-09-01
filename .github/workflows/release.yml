@@ -154,17 +154,17 @@ jobs:
             verifyPublicationArtifacts verifyReleaseCandidate
           test "$(stat -c %s \
             "build/libs/bluemap-modular-routers-addon-${VERSION}.jar")" \
-            -eq 50021
+            -eq 53593
           test "$(stat -c %s \
             "build/libs/bluemap-modular-routers-addon-${VERSION}-sources.jar")" \
-            -eq 28721
+            -eq 30100
           test "$(stat -c %s build/publications/addon/pom-default.xml)" -eq 1376
           test "$(stat -c %s build/publications/addon/module.json)" -eq 2873
           sha256sum --check <<SHA256SUMS
-          11073269fb60bb65a011aa987015264b73c1170bce93fc6677a6fe507ee22f45  build/libs/bluemap-modular-routers-addon-${VERSION}.jar
-          c328f9d896da758f42053b97298e43c166c4102ac50ff26083bec8e6b4f08276  build/libs/bluemap-modular-routers-addon-${VERSION}-sources.jar
+          160a3fc276057e634b5c1c2dad7641028c7be811a5a7262d6da53c3936b8dfc2  build/libs/bluemap-modular-routers-addon-${VERSION}.jar
+          4f0775396de8c9efaad67ccc92842cb304d03f6fde51875afb2bc5576dd7bd42  build/libs/bluemap-modular-routers-addon-${VERSION}-sources.jar
           83bd1e0332250735d4d7dacf16f960027355a77e7e376649d4add4d611e68807  build/publications/addon/pom-default.xml
-          c143fe978879bf91b07922c72250792ff3b20dc9374cdf117c9f619f6e1693a2  build/publications/addon/module.json
+          a235e86a49c5889fa2c406f3fd330200f5d38a0ffead25356cba84318cd887bc  build/publications/addon/module.json
           SHA256SUMS
 
       - name: Prepare deterministic release bundle
@@ -189,7 +189,7 @@ jobs:
           (cd release && sha256sum --check SHA256SUMS)
           test "$(stat -c %s release/SHA256SUMS)" -eq 480
           test "$(sha256sum release/SHA256SUMS | cut -d ' ' -f 1)" = \
-            8c18d09321a7e7c30dc3f6ba3ce326fe593567493efa9f90f49689d3f086053f
+            3f52c24bbbf2a37b2af56f73d2faf40294956cff08c2765e1316000c89ac3c8e
 
       - name: Create or refresh draft prerelease
         env:

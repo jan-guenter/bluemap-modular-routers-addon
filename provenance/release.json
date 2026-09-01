@@ -34,19 +34,30 @@
     "version": "0.1.0-alpha.2",
     "tag": "v0.1.0-alpha.2",
     "commit": "7d75cd0288849bc577471f566008b834ad36f37b",
-    "size": 166871,
-    "sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60"
+    "compatible_artifacts": [
+      {
+        "role": "standalone_candidate",
+        "size": 166871,
+        "sha256": "9df99ffba26b1dd5a38452fb020e9a931b6a16a4ab4c374d85dad91cb9437e60"
+      },
+      {
+        "role": "accepted_aggregate_integration_overlay",
+        "size": 166916,
+        "sha256": "1a6b5ec84cd6c1a1bb1f0f711ddec4d6cef4b493b80d8da4d1139ad8a4eba28c",
+        "only_changed_entry": "io/github/janguenter/bluemap/glassential/BlueMapGlassentialAddon.class"
+      }
+    ]
   },
   "candidate_artifacts": {
     "production_jar": {
       "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2.jar",
-      "size": 50021,
-      "sha256": "11073269fb60bb65a011aa987015264b73c1170bce93fc6677a6fe507ee22f45"
+      "size": 53593,
+      "sha256": "160a3fc276057e634b5c1c2dad7641028c7be811a5a7262d6da53c3936b8dfc2"
     },
     "sources_jar": {
       "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2-sources.jar",
-      "size": 28721,
-      "sha256": "c328f9d896da758f42053b97298e43c166c4102ac50ff26083bec8e6b4f08276"
+      "size": 30100,
+      "sha256": "4f0775396de8c9efaad67ccc92842cb304d03f6fde51875afb2bc5576dd7bd42"
     },
     "pom": {
       "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2.pom",
@@ -56,12 +67,12 @@
     "gradle_module": {
       "file_name": "bluemap-modular-routers-addon-0.1.0-alpha.2.module.json",
       "size": 2873,
-      "sha256": "c143fe978879bf91b07922c72250792ff3b20dc9374cdf117c9f619f6e1693a2"
+      "sha256": "a235e86a49c5889fa2c406f3fd330200f5d38a0ffead25356cba84318cd887bc"
     },
     "sha256sums": {
       "file_name": "SHA256SUMS",
       "size": 480,
-      "sha256": "8c18d09321a7e7c30dc3f6ba3ce326fe593567493efa9f90f49689d3f086053f"
+      "sha256": "3f52c24bbbf2a37b2af56f73d2faf40294956cff08c2765e1316000c89ac3c8e"
     }
   },
   "preserved_contract": {
@@ -71,7 +82,7 @@
     "gallery_assertions_per_phase": 8,
     "gallery_sources_changed": false,
     "profiles_and_resources_changed": false,
-    "renderer_behavior_changed": false,
+    "renderer_behavior_changed": true,
     "stock_fallback_changed": false
   },
   "ephemeral_ci_input": {
@@ -84,9 +95,20 @@
     "production_archive_boundary_gate": true,
     "sources_archive_boundary_gate": true,
     "local_candidate_artifact_identity_gate": true,
+    "late_renderer_wrapper_regression": true,
+    "glassential_translucent_delegation_regression": true,
     "authoritative_pr_ci_reproduction": false,
     "local_gradle_version": "9.6.1",
     "local_java_runtime": "21.0.12.1+1",
-    "exact_alpha_2_runtime_review": false
+    "exact_alpha_2_runtime_review": true,
+    "aggregate_glassential_overlay_review": true
+  },
+  "owner_accepted_staging": {
+    "visual_acceptance": true,
+    "accepted_on": "2026-09-01",
+    "scope": "All four Modular Routers samples accepted in the aggregate BlueMap 5.23 v37 render; propertyless glass is translucent with the gray interior visible.",
+    "integration_run": "bluemap-atmons-integration-20260901-v37",
+    "glassential_overlay_sha256": "1a6b5ec84cd6c1a1bb1f0f711ddec4d6cef4b493b80d8da4d1139ad8a4eba28c",
+    "gallery_failures": 0
   }
 }
